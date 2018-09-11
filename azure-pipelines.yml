@@ -1,39 +1,71 @@
 resources:
-    -
-        repo: self
+- repo: self
 phases:
-    -
-        phase: Phase_1
-        displayName: SQLite
-        condition: succeeded()
-        queue:
-            name: 'Hosted Ubuntu 1604'
-        steps:
-            - {script: "curl -sSL https://dl.yarnpkg.com/debian/pubkey.gpg | sudo -E apt-key add -\necho \"deb https://dl.yarnpkg.com/debian/ stable main\" | sudo tee -a /etc/apt/sources.list >/dev/null\nsudo -E apt-get -yq update &>> ~/apt-get-update.log\nsudo -E apt-get -yq --no-install-suggests --no-install-recommends $TRAVIS_APT_OPTS install yarn\n\nyarn\nyarn add --force sqlite3\n\nyarn test\n", displayName: 'Command Line Script'}
-        env:
-            NODE_ENV: testing
-            DB: sqlite3
-            TRAVIS: Kindof
-    -
-        phase: Phase_2
-        displayName: MySQL
-        condition: succeeded()
-        queue:
-            name: 'Hosted Ubuntu 1604'
-        steps:
-            - {script: "curl -sSL https://dl.yarnpkg.com/debian/pubkey.gpg | sudo -E apt-key add -\necho \"deb https://dl.yarnpkg.com/debian/ stable main\" | sudo tee -a /etc/apt/sources.list >/dev/null\nsudo -E apt-get -yq update &>> ~/apt-get-update.log\nsudo -E apt-get -yq --no-install-suggests --no-install-recommends $TRAVIS_APT_OPTS install yarn\n\nyarn\n\nyarn test\n", displayName: 'Command Line Script'}
-        env:
-            NODE_ENV: testing-mysql
-            DB: mysql
-            TRAVIS: kindof
-    -
-        phase: Phase_3
-        displayName: Lint
-        condition: succeeded()
-        queue:
-            name: 'Hosted Ubuntu 1604'
-        steps:
-            - {script: "curl -sSL https://dl.yarnpkg.com/debian/pubkey.gpg | sudo -E apt-key add -\necho \"deb https://dl.yarnpkg.com/debian/ stable main\" | sudo tee -a /etc/apt/sources.list >/dev/null\nsudo -E apt-get -yq update &>> ~/apt-get-update.log\nsudo -E apt-get -yq --no-install-suggests --no-install-recommends $TRAVIS_APT_OPTS install yarn\n\nyarn\n\nyarn test\n", displayName: 'Command Line Script'}
-        env:
-            TEST_SUITE: lint
-            TRAVIS: kindof
+- phase: Phase_1
+  displayName: SQLite
+
+  condition: succeeded()
+  queue:
+    name: Hosted Ubuntu 1604
+  steps:
+  - script: |  
+       curl -sSL https://dl.yarnpkg.com/debian/pubkey.gpg | sudo -E apt-key add -
+       echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee -a /etc/apt/sources.list >/dev/null
+       sudo -E apt-get -yq update &>> ~/apt-get-update.log
+       sudo -E apt-get -yq --no-install-suggests --no-install-recommends $TRAVIS_APT_OPTS install yarn
+       
+       yarn
+       yarn add --force sqlite3
+       
+       yarn test 
+    displayName: 'Command Line Script'
+  env:
+    NODE_ENV: testing
+    DB: sqlite3
+    TRAVIS: Kindof
+
+
+- phase: Phase_2
+  displayName: MySQL
+
+  condition: succeeded()
+  queue:
+    name: Hosted Ubuntu 1604
+  steps:
+  - script: |  
+       curl -sSL https://dl.yarnpkg.com/debian/pubkey.gpg | sudo -E apt-key add -
+       echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee -a /etc/apt/sources.list >/dev/null
+       sudo -E apt-get -yq update &>> ~/apt-get-update.log
+       sudo -E apt-get -yq --no-install-suggests --no-install-recommends $TRAVIS_APT_OPTS install yarn
+       
+       yarn
+       
+       yarn test 
+    displayName: 'Command Line Script'
+  env:
+    NODE_ENV: testing-mysql
+    DB: mysql
+    TRAVIS: kindof
+
+
+- phase: Phase_3
+  displayName: Lint
+
+  condition: succeeded()
+  queue:
+    name: Hosted Ubuntu 1604
+  steps:
+  - script: |  
+       curl -sSL https://dl.yarnpkg.com/debian/pubkey.gpg | sudo -E apt-key add -
+       echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee -a /etc/apt/sources.list >/dev/null
+       sudo -E apt-get -yq update &>> ~/apt-get-update.log
+       sudo -E apt-get -yq --no-install-suggests --no-install-recommends $TRAVIS_APT_OPTS install yarn
+       
+       yarn
+       
+       yarn test 
+    displayName: 'Command Line Script'
+  env:
+    TEST_SUITE: lint
+    TRAVIS: kindof
+
