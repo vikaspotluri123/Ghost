@@ -12,12 +12,6 @@ const Promise = require('bluebird'),
 
 let db;
 
-db.importer = importer;
-/*
- * @deprecated - proxy method for sync importer to keep v0.1 API unchanged
- */
-db.importContent = importer.importContent;
-
 /**
  * ## DB API Methods
  *
@@ -138,5 +132,11 @@ db = {
         return pipeline(tasks, options);
     }
 };
+
+db.importer = importer;
+/*
+* @deprecated - proxy method for sync importer to keep v0.1 API unchanged
+*/
+db.importContent = importer.importContent;
 
 module.exports = db;
