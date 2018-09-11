@@ -148,7 +148,8 @@ module.exports = function apiRoutes() {
     );
     apiRouter.get('/db/import/status', mw.authenticatePrivate, api.http(api.db.importer.state));
 
-    // legacy (deprecated)
+    // ## DB
+    apiRouter.get('/db', mw.authenticatePrivate, api.http(api.db.exportContent));
     apiRouter.post('/db',
         mw.authenticatePrivate,
         upload.single('importfile'),
