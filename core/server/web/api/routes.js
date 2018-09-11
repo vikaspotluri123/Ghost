@@ -140,13 +140,13 @@ module.exports = function apiRoutes() {
 
     // ## DB
     apiRouter.get('/db', mw.authenticatePrivate, api.http(api.db.exportContent));
-    apiRouter.post('/db/upload',
+    apiRouter.post('/db/import',
         mw.authenticatePrivate,
         upload.single('importfile'),
         validation.upload({type: 'db'}),
         api.http(api.db.importer.run)
     );
-    apiRouter.get('/db/importStatus', mw.authenticatePrivate, api.http(api.db.importer.state));
+    apiRouter.get('/db/import/status', mw.authenticatePrivate, api.http(api.db.importer.state));
 
     // legacy (deprecated)
     apiRouter.post('/db',
