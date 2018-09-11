@@ -154,7 +154,7 @@ module.exports = function apiRoutes() {
         mw.authenticatePrivate,
         upload.single('importfile'),
         validation.upload({type: 'db'}),
-        api.http(api.db.importer.legacyImport)
+        api.http(api.db.importContent)
     );
     apiRouter.del('/db', mw.authenticatePrivate, api.http(api.db.deleteAllContent));
 

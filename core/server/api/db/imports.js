@@ -8,7 +8,7 @@ const docName = 'db';
 const tasks = [
     localUtils.handlePermissions(docName, 'importContent'),
     localUtils.convertOptions(EXCLUDED_TABLES, null, {forModel: false}),
-    importContent
+    runImporter
 ];
 
 let state = {
@@ -17,7 +17,7 @@ let state = {
     lastAction: false
 };
 
-function importContent({fileName, include}) {
+function runImporter({fileName, include}) {
     return importer.importFromFile(fileName, {include})
         // NOTE: response can contain 2 objects if images are imported
         .then((response) => {
@@ -69,12 +69,12 @@ module.exports.async = function importContent(options = {}) {
 /**
  * ### Import Content
  * Import posts, tags etc from a JSON blob
- * @deprecated
  *
+ * @deprecated
  * @public
  * @param {{context}} options
  * @returns {Promise} Success
  */
-module.exports.legacyImport = function importSync(options) {
+module.exports.importContent = function executeLegacyImport(options) {
     return pipeline(tasks, options || {});
 };
