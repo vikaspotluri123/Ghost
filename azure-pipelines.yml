@@ -3,10 +3,7 @@ resources:
 phases:
 - phase: Phase_1
   displayName: SQLite
-  env:
-    NODE_ENV: testing
-    DB: sqlite3
-    TRAVIS: Kindof
+
   queue:
     name: Hosted Ubuntu 1604
   steps:
@@ -21,13 +18,16 @@ phases:
        
        yarn test 
     displayName: 'Command Line Script'
+    env:
+      NODE_ENV: testing
+      DB: sqlite3
+      TRAVIS: Kindof
+
 
 - phase: Phase_2
   displayName: MySQL
-  env:
-    NODE_ENV: testing-mysql
-    DB: mysql
-    TRAVIS: kindof
+
+  condition: succeeded()
   queue:
     name: Hosted Ubuntu 1604
   steps:
@@ -41,12 +41,16 @@ phases:
        
        yarn test 
     displayName: 'Command Line Script'
+    env:
+      NODE_ENV: testing-mysql
+      DB: mysql
+      TRAVIS: kindof
+
 
 - phase: Phase_3
   displayName: Lint
-  env:
-    TEST_SUITE: lint
-    TRAVIS: kindof
+
+  condition: succeeded()
   queue:
     name: Hosted Ubuntu 1604
   steps:
@@ -60,3 +64,6 @@ phases:
        
        yarn test 
     displayName: 'Command Line Script'
+    env:
+      TEST_SUITE: lint
+      TRAVIS: kindof
