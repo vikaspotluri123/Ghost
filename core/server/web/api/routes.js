@@ -144,7 +144,7 @@ module.exports = function apiRoutes() {
         mw.authenticatePrivate,
         upload.single('importfile'),
         validation.upload({type: 'db'}),
-        api.http(api.db.importer.run)
+        api.http(api.db.importer.async)
     );
     apiRouter.get('/db/import/status', mw.authenticatePrivate, api.http(api.db.importer.state));
 
@@ -153,7 +153,7 @@ module.exports = function apiRoutes() {
         mw.authenticatePrivate,
         upload.single('importfile'),
         validation.upload({type: 'db'}),
-        api.http(api.db.importer.legacy)
+        api.http(api.db.importer.legacyImport)
     );
     apiRouter.del('/db', mw.authenticatePrivate, api.http(api.db.deleteAllContent));
 

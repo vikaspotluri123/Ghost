@@ -40,7 +40,7 @@ module.exports.status = () => {
  * @param {{context}} options
  * @returns {Promise} import state (same as getStatus)
  */
-module.exports.run = function importContent(options = {}) {
+module.exports.async = function importContent(options = {}) {
     if (state.importing) {
         return Promise.reject(new Error('TODO_FIXME_ALREADY_IMPORTING'));
     }
@@ -69,11 +69,12 @@ module.exports.run = function importContent(options = {}) {
 /**
  * ### Import Content
  * Import posts, tags etc from a JSON blob
+ * @deprecated
  *
  * @public
  * @param {{context}} options
  * @returns {Promise} Success
  */
-module.exports.legacy = function deprectaedImport(options) {
+module.exports.legacyImport = function importSync(options) {
     return pipeline(tasks, options || {});
 };
