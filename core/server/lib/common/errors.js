@@ -66,6 +66,12 @@ const ghostErrors = {
             statusCode: 409,
             errorType: 'UpdateCollisionError'
         }, options));
+    },
+    AlreadyImportingError: function AlreadyImportingError(options) {
+        GhostError.call(this, merge({
+            statusCode: 409,
+            errorType: 'AlreadyImportingError'
+        }, options));
     }
 };
 

@@ -1,5 +1,7 @@
 const Promise = require('lodash');
-const pipeline = require('../lib/promise/pipeline');
+const pipeline = require('../../lib/promise/pipeline');
+const {AlreadyImportingError} = require('../../lib/common/errors');
+const {t} = require('../../lib/common/i18n')
 const localUtils = require('../utils');
 const importer = require('../../data/importer');
 const {EXCLUDED_TABLES} = require('../../data/exporter');
@@ -12,9 +14,11 @@ const tasks = [
 ];
 
 let state = {
-    errors: [],
     importing: false,
-    lastAction: false
+    lastImport: {
+        success: true,
+        errors: []
+    }
 };
 
 function runImporter({fileName, include}) {
@@ -32,6 +36,16 @@ module.exports.status = () => {
     return Promise.resolve(state);
 };
 
+module.exports.noDuplicateImport = function () {
+    if (state.importing) {
+        return Promise.reject(new AlreadyImportingError({
+            message: t('common.api.import.alreadyImporting')
+        }));
+    }
+
+    return Promise.resolve;
+};
+
 /**
  * ### Import Content
  * Import posts, tags etc from a JSON blob
@@ -41,26 +55,23 @@ module.exports.status = () => {
  * @returns {Promise} import state (same as getStatus)
  */
 module.exports.async = function importContent(options = {}) {
-    if (state.importing) {
-        return Promise.reject(new Error('TODO_FIXME_ALREADY_IMPORTING'));
-    }
-
     state.importing = true;
 
     pipeline(tasks, options).then(({problems}) => {
         state.importing = false;
         if (problems && problems.length) {
             // @todo: determine how to check for warnings?
-            state.lastAction = 'error';
-            state.errors = problems;
+            state.lastImport.success = false;
+            state.lastImport.errors = problems;
         } else {
-            state.lastAction = 'success';
-            state.errors = [];
+            state.lastImport.success = true;
+            state.lastImport.errors = [];
         }
     }).catch((error) => {
         state.importing = false;
-        state.lastAction = 'error';
-        state.errors = [error];
+        state.lastImport.success = 'false';
+        // @todo: clean up this error (it will be made public)
+        state.lastImport.errors = [error];
     });
 
     return Promise.resolve({state});

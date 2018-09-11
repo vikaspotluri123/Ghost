@@ -28,6 +28,9 @@
             },
             "clients": {
                 "clientNotFound": "Client not found"
+            },
+            "import": {
+                "alreadyImporting": "An import is already in progress. You can only run one import at a time."
             }
         }
     },
