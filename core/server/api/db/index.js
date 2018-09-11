@@ -1,17 +1,18 @@
 // # DB API
 // API for DB operations
 const Promise = require('bluebird'),
-    _ = require('lodash'),
     pipeline = require('../lib/promise/pipeline'),
     localUtils = require('./utils'),
     exporter = require('../data/exporter'),
-    importer = require('../data/importer'),
     backupDatabase = require('../data/db/backup'),
     models = require('../models'),
     common = require('../lib/common'),
-    docName = 'db';
+    docName = 'db',
+    importer = require('./importer');
 
 let db;
+
+db.importer = importer;
 
 /**
  * ## DB API Methods
@@ -71,37 +72,6 @@ db = {
             localUtils.handlePermissions(docName, 'exportContent'),
             localUtils.convertOptions(exporter.EXCLUDED_TABLES, null, {forModel: false}),
             exportContent
-        ];
-
-        return pipeline(tasks, options);
-    },
-    /**
-     * ### Import Content
-     * Import posts, tags etc from a JSON blob
-     *
-     * @public
-     * @param {{context}} options
-     * @returns {Promise} Success
-     */
-    importContent: function importContent(options) {
-        let tasks;
-        options = options || {};
-
-        function importContent(options) {
-            return importer.importFromFile(_.omit(options, 'include'), {include: options.include})
-                // NOTE: response can contain 2 objects if images are imported
-                .then((response) => {
-                    return {
-                        db: [],
-                        problems: response.length === 2 ? response[1].problems : response[0].problems
-                    };
-                });
-        }
-
-        tasks = [
-            localUtils.handlePermissions(docName, 'importContent'),
-            localUtils.convertOptions(exporter.EXCLUDED_TABLES, null, {forModel: false}),
-            importContent
         ];
 
         return pipeline(tasks, options);
