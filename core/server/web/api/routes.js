@@ -144,9 +144,8 @@ module.exports = function apiRoutes() {
         mw.authenticatePrivate,
         upload.single('importfile'),
         validation.upload({type: 'db'}),
-        api.http(api.db.importer.addKnownFile)
+        api.http(api.db.importer.run)
     );
-    apiRouter.post('/db/import', mw.authenticatePrivate, api.http(api.db.importers.run));
     apiRouter.get('/db/importStatus', mw.authenticatePrivate, api.http(api.db.importer.state));
 
     // legacy (deprecated)

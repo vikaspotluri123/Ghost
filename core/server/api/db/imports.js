@@ -11,7 +11,6 @@ const tasks = [
     importContent
 ];
 
-let knownFiles = [];
 let state = {
     errors: [],
     importing: false,
@@ -33,11 +32,6 @@ module.exports.status = () => {
     return Promise.resolve(state);
 };
 
-module.exports.addKnownFile = ({fileName}) => {
-    knownFiles.push(fileName);
-    return Promise.resolve(fileName);
-};
-
 /**
  * ### Import Content
  * Import posts, tags etc from a JSON blob
@@ -49,14 +43,6 @@ module.exports.addKnownFile = ({fileName}) => {
 module.exports.run = function importContent(options = {}) {
     if (state.importing) {
         return Promise.reject(new Error('TODO_FIXME_ALREADY_IMPORTING'));
-    }
-
-    if (!options.fileName) {
-        return Promise.reject(new Error('TODO_FIXME_FILENAME_NOT_SUPPLIED'));
-    }
-
-    if (!knownFiles.includes(options.fileName)) {
-        return Promise.reject(new Error('TODO_FIXME_UNSAFE_FILENAME_PASSED'));
     }
 
     state.importing = true;
