@@ -1,16 +1,71 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
+resources:
+- repo: self
+phases:
+- phase: Phase_1
+  displayName: SQLite
 
-pool:
-  vmImage: 'Ubuntu 16.04'
+  condition: succeeded()
+  queue:
+    name: Hosted Ubuntu 1604
+  steps:
+  - script: |  
+       curl -sSL https://dl.yarnpkg.com/debian/pubkey.gpg | sudo -E apt-key add -
+       echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee -a /etc/apt/sources.list >/dev/null
+       sudo -E apt-get -yq update &>> ~/apt-get-update.log
+       sudo -E apt-get -yq --no-install-suggests --no-install-recommends $TRAVIS_APT_OPTS install yarn
+       
+       yarn
+       yarn add --force sqlite3
+       
+       yarn test 
+    displayName: 'Command Line Script'
+  env:
+    NODE_ENV: testing
+    DB: sqlite3
+    TRAVIS: Kindof
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+- phase: Phase_2
+  displayName: MySQL
+
+  condition: succeeded()
+  queue:
+    name: Hosted Ubuntu 1604
+  steps:
+  - script: |  
+       curl -sSL https://dl.yarnpkg.com/debian/pubkey.gpg | sudo -E apt-key add -
+       echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee -a /etc/apt/sources.list >/dev/null
+       sudo -E apt-get -yq update &>> ~/apt-get-update.log
+       sudo -E apt-get -yq --no-install-suggests --no-install-recommends $TRAVIS_APT_OPTS install yarn
+       
+       yarn
+       
+       yarn test 
+    displayName: 'Command Line Script'
+  env:
+    NODE_ENV: testing-mysql
+    DB: mysql
+    TRAVIS: kindof
+
+
+- phase: Phase_3
+  displayName: Lint
+
+  condition: succeeded()
+  queue:
+    name: Hosted Ubuntu 1604
+  steps:
+  - script: |  
+       curl -sSL https://dl.yarnpkg.com/debian/pubkey.gpg | sudo -E apt-key add -
+       echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee -a /etc/apt/sources.list >/dev/null
+       sudo -E apt-get -yq update &>> ~/apt-get-update.log
+       sudo -E apt-get -yq --no-install-suggests --no-install-recommends $TRAVIS_APT_OPTS install yarn
+       
+       yarn
+       
+       yarn test 
+    displayName: 'Command Line Script'
+  env:
+    TEST_SUITE: lint
+    TRAVIS: kindof
+
