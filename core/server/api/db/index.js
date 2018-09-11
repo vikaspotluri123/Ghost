@@ -1,12 +1,12 @@
 // # DB API
 // API for DB operations
 const Promise = require('bluebird'),
-    pipeline = require('../lib/promise/pipeline'),
-    localUtils = require('./utils'),
-    exporter = require('../data/exporter'),
-    backupDatabase = require('../data/db/backup'),
-    models = require('../models'),
-    common = require('../lib/common'),
+    pipeline = require('../../lib/promise/pipeline'),
+    localUtils = require('../utils'),
+    exporter = require('../../data/exporter'),
+    backupDatabase = require('../../data/db/backup'),
+    models = require('../../models'),
+    {GhostError} = require('../../lib/common/errors'),
     docName = 'db',
     importer = require('./importer');
 
@@ -68,7 +68,7 @@ db = {
                     db: [exportedData]
                 };
             }).catch((err) => {
-                return Promise.reject(new common.errors.GhostError({err: err}));
+                return Promise.reject(new GhostError({err: err}));
             });
         }
 
@@ -122,7 +122,7 @@ db = {
                     })
                     .return({db: []})
                     .catch((err) => {
-                        throw new common.errors.GhostError({
+                        throw new GhostError({
                             err: err
                         });
                     });
