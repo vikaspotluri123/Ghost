@@ -119,6 +119,7 @@ module.exports = {
         name: {type: 'string', maxlength: 191, nullable: false},
         slug: {type: 'string', maxlength: 191, nullable: false, unique: true},
         password: {type: 'string', maxlength: 60, nullable: false},
+        mfa_enabled: {type: 'boolean', nullable: false, defaultTo: false},
         email: {type: 'string', maxlength: 191, nullable: false, unique: true, validations: {isEmail: true}},
         profile_image: {type: 'string', maxlength: 2000, nullable: true},
         cover_image: {type: 'string', maxlength: 2000, nullable: true},
@@ -169,6 +170,14 @@ module.exports = {
         created_by: {type: 'string', maxlength: 24, nullable: false},
         updated_at: {type: 'dateTime', nullable: true},
         updated_by: {type: 'string', maxlength: 24, nullable: true}
+    },
+    users_second_factors: {
+        id: {type: 'string', maxlength: 24, nullable: false, primary: true},
+        user_id: {type: 'string', maxlength: 24, nullable: false, references: 'users.id', cascadeDelete: true},
+        name: {type: 'string', maxlength: 191, nullable: false},
+        status: {type: 'string', maxlength: 50, nullable: false, validations: {isIn: [['pending', 'active', 'disabled']]}},
+        type: {type: 'string', maxlength: 50, nullable: false},
+        context: {type: 'string', maxlength: 2000, nullable: true}
     },
     posts_authors: {
         id: {type: 'string', maxlength: 24, nullable: false, primary: true},
