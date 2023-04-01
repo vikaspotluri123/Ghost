@@ -6,6 +6,10 @@ const tpl = require('@tryghost/tpl');
 const settingsCache = require('./settings-cache');
 const config = require('./config');
 
+/**
+ * @typedef {typeof GA_FEATURES[number] | typeof BETA_FEATURES[number] | typeof ALPHA_FEATURES[number] | 'members'} ActiveLabs
+ */
+
 const messages = {
     errorMessage: 'The \\{\\{{helperName}\\}\\} helper is not available.',
     errorContext: 'The {flagName} flag must be enabled in labs if you wish to use the \\{\\{{helperName}\\}\\} helper.',
@@ -13,24 +17,24 @@ const messages = {
 };
 
 // flags in this list always return `true`, allows quick global enable prior to full flag removal
-const GA_FEATURES = [
+const GA_FEATURES = /** @type {const} */ ([
     'audienceFeedback',
     'themeErrorsNotification',
     'outboundLinkTagging',
     'announcementBar',
     'signupForm'
-];
+]);
 
 // NOTE: this allowlist is meant to be used to filter out any unexpected
 //       input for the "labs" setting value
-const BETA_FEATURES = [
+const BETA_FEATURES = /** @type {const} */ ([
     'i18n',
     'activitypub',
     'webmentions',
     'lexicalEditor'
-];
+]);
 
-const ALPHA_FEATURES = [
+const ALPHA_FEATURES = /** @type {const} */ ([
     'urlCache',
     'lexicalMultiplayer',
     'websockets',
@@ -45,11 +49,12 @@ const ALPHA_FEATURES = [
     'recommendations',
     'lexicalIndicators',
     'multiFactorAuthentication'
-];
+]);
 
 module.exports.GA_KEYS = [...GA_FEATURES];
 module.exports.WRITABLE_KEYS_ALLOWLIST = [...BETA_FEATURES, ...ALPHA_FEATURES];
 
+/** @returns {Partial<Record<ActiveLabs, boolean>>} */
 module.exports.getAll = () => {
     const labs = _.cloneDeep(settingsCache.get('labs')) || {};
 
@@ -69,7 +74,7 @@ module.exports.getAll = () => {
 };
 
 /**
- * @param {string} flag
+ * @param {ActiveLabs} flag
  * @returns {boolean}
  */
 module.exports.isSet = function isSet(flag) {
@@ -81,7 +86,7 @@ module.exports.isSet = function isSet(flag) {
 /**
  *
  * @param {object} options
- * @param {string} options.flagKey the internal lookup key of the flag e.g. labs.isSet(matchHelper)
+ * @param {ActiveLabs} options.flagKey the internal lookup key of the flag e.g. labs.isSet(matchHelper)
  * @param {string} options.flagName the user-facing name of the flag e.g. Match helper
  * @param {string} options.helperName Name of the helper to be enabled/disabled
  * @param {string} [options.errorMessage] Optional replacement error message
@@ -126,7 +131,7 @@ module.exports.enabledHelper = function enabledHelper(options, callback) {
     return errString;
 };
 
-module.exports.enabledMiddleware = flag => (req, res, next) => {
+module.exports.enabledMiddleware = /** @param {ActiveLabs} flag */ flag => (req, res, next) => {
     if (module.exports.isSet(flag) === true) {
         return next();
     } else {

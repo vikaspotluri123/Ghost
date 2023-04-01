@@ -238,6 +238,7 @@ const fakeLabsIsSet = (flag) => {
     return originalLabsIsSet(flag);
 };
 
+/** @param {import('../../core/shared/labs').ActiveLabs} flag */
 const mockLabsEnabled = (flag, alpha = true) => {
     // We assume we should enable alpha experiments unless explicitly told not to!
     if (!alpha) {
