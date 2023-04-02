@@ -79,6 +79,7 @@ export default class FeatureService extends Service {
     @feature('tipsAndDonations') tipsAndDonations;
     @feature('recommendations') recommendations;
     @feature('lexicalIndicators') lexicalIndicators;
+    @feature('multiFactorAuthentication') multiFactorAuthentication;
 
     _user = null;
 
