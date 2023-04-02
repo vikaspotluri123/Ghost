@@ -9,6 +9,7 @@ const errors = require('@tryghost/errors');
 const validator = require('@tryghost/validator');
 const urlUtils = require('../../shared/url-utils');
 const {WRITABLE_KEYS_ALLOWLIST} = require('../../shared/labs');
+const {getMfaService} = require('../services/auth/multifactor.js');
 
 const messages = {
     valueCannotBeBlank: 'Value in [settings.key] cannot be blank.',
@@ -58,7 +59,8 @@ function parseDefaultSettings() {
         members_private_key: () => getMembersKey('private'),
         members_email_auth_secret: () => crypto.randomBytes(64).toString('hex'),
         ghost_public_key: () => getGhostKey('public'),
-        ghost_private_key: () => getGhostKey('private')
+        ghost_private_key: () => getGhostKey('private'),
+        second_factor: () => getMfaService().syncSecrets()
     };
 
     _.each(defaultSettingsInCategories, function each(settings, categoryName) {
