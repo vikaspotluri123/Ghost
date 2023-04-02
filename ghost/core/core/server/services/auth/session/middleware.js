@@ -1,3 +1,7 @@
+/**
+ * @param {object} deps
+ * @param {ReturnType<import('@tryghost/session-service')>} deps.sessionService
+ */
 function SessionMiddleware({sessionService}) {
     async function createSession(req, res, next) {
         try {
