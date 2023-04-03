@@ -101,6 +101,16 @@ module.exports = function apiRoutes() {
     router.put('/users/:id/token', mw.authAdminApi, http(api.users.regenerateToken));
     router.del('/users/:id', mw.authAdminApi, http(api.users.destroy));
 
+    // ## Users Second Factors
+    const mfaEnabled = labs.enabledMiddleware('multiFactorAuthentication');
+    router.get('/users/:user/second-factors', mfaEnabled, mw.authAdminApi, http(api.usersSecondFactors.browse));
+    router.get('/users/:user/second-factors/:id', mfaEnabled, mw.authAdminApi, http(api.usersSecondFactors.read));
+
+    router.post('/users/:user/second-factors', mfaEnabled, mw.authAdminApi, http(api.usersSecondFactors.add));
+    // @TODO
+    // router.put('/users/:user/second-factors/:id', mfaEnabled, mw.authAdminApi, http(api.usersSecondFactors.edit));
+    router.del('/users/:user/second-factors/:id', mfaEnabled, mw.authAdminApi, http(api.usersSecondFactors.destroy));
+
     // ## Tags
     router.get('/tags', mw.authAdminApi, http(api.tags.browse));
     router.get('/tags/:id', mw.authAdminApi, http(api.tags.read));
@@ -238,6 +248,7 @@ module.exports = function apiRoutes() {
         shared.middleware.brute.userLogin,
         http(api.session.add)
     );
+    router.post('/session/second-factor', mfaEnabled, mw.authAdminApi, http(api.usersSecondFactors.validate));
     router.del('/session', mw.authAdminApi, http(api.session.delete));
 
     // ## Identity

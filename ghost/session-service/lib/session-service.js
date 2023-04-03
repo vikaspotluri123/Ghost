@@ -34,6 +34,8 @@ const messages = {
  * @prop {(req: Req, res: Res) => Promise<User | null>} getUserForSession
  * @prop {(req: Req, res: Res) => Promise<void>} destroyCurrentSession
  * @prop {(req: Req, res: Res, user: User) => Promise<void>} createSessionForUser
+ * @prop {(session: Session) => boolean} waitingForSecondFactor
+ * @prop {(session: Session) => void} secondFactorVerified
  */
 
 /**
@@ -158,10 +160,24 @@ module.exports = function createSessionService({
         }
     }
 
+    /** @param {Session} session */
+    function waitingForSecondFactor(session) {
+        return isMfaLabEnabled() && session.needs_second_factor === true;
+    }
+
+    /** @param {Session} session */
+    function secondFactorVerified(session) {
+        if (isMfaLabEnabled()) {
+            delete session.needs_second_factor;
+        }
+    }
+
     return {
         getUserForSession,
         createSessionForUser,
-        destroyCurrentSession
+        destroyCurrentSession,
+        waitingForSecondFactor,
+        secondFactorVerified
     };
 };
 

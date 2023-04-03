@@ -89,6 +89,10 @@ module.exports = {
         return require('./users');
     },
 
+    get users_second_factors() {
+        return require('./users-second-factors');
+    },
+
     get previews() {
         return require('./previews');
     },

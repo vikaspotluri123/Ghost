@@ -129,6 +129,10 @@ module.exports = {
         return apiFramework.pipeline(require('./users'), localUtils);
     },
 
+    get usersSecondFactors() {
+        return apiFramework.pipeline(require('./users-second-factors'), localUtils);
+    },
+
     get previews() {
         return apiFramework.pipeline(require('./previews'), localUtils);
     },
