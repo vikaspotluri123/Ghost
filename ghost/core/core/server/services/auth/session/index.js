@@ -8,6 +8,7 @@ const expressSession = require('./express-session');
 const models = require('../../../models');
 const urlUtils = require('../../../../shared/url-utils');
 const url = require('url');
+const labs = require('../../../../shared/labs.js');
 
 function getOriginOfRequest(req) {
     const origin = req.get('origin');
@@ -33,7 +34,9 @@ const sessionService = createSessionService({
     getSession: expressSession.getSession,
     findUserById({id}) {
         return models.User.findOne({id, status: 'active'});
-    }
+    },
+    isMfaLabEnabled: () => labs.isSet('multiFactorAuthentication'),
+    canRequestBypassMfa: () => false // @TODO
 });
 
 module.exports = createSessionMiddleware({sessionService});

@@ -1,11 +1,17 @@
 const {
     BadRequestError,
+    UnauthorizedError,
     InternalServerError
 } = require('@tryghost/errors');
+
+const messages = {
+    missingMfa: 'You are logged in, but have not provided your second factor'
+};
 
 /**
  * @typedef {object} User
  * @prop {string} id
+ * @prop {boolean} mfa_enabled
  */
 
 /**
@@ -15,6 +21,7 @@ const {
  * @prop {string} origin
  * @prop {string} user_agent
  * @prop {string} ip
+ * @prop {boolean} [needs_second_factor]
  */
 
 /**
@@ -34,11 +41,15 @@ const {
  * @param {(req: Req, res: Res) => Promise<Session>} deps.getSession
  * @param {(data: {id: string}) => Promise<User>} deps.findUserById
  * @param {(req: Req) => string} deps.getOriginOfRequest
+ * @param {(req: Req) => boolean} deps.canRequestBypassMfa
+ * @param {() => boolean} deps.isMfaLabEnabled
  *
  * @returns {SessionService}
  */
 
-module.exports = function createSessionService({getSession, findUserById, getOriginOfRequest}) {
+module.exports = function createSessionService({
+    getSession, findUserById, getOriginOfRequest, canRequestBypassMfa, isMfaLabEnabled
+}) {
     /**
      * cookieCsrfProtection
      *
@@ -83,6 +94,10 @@ module.exports = function createSessionService({getSession, findUserById, getOri
         session.origin = origin;
         session.user_agent = req.get('user-agent');
         session.ip = req.ip;
+
+        if (isMfaLabEnabled() && user.mfa_enabled) {
+            session.needs_second_factor = true;
+        }
     }
 
     /**
@@ -130,6 +145,13 @@ module.exports = function createSessionService({getSession, findUserById, getOri
 
         try {
             const user = await findUserById({id: session.user_id});
+
+            if (isMfaLabEnabled()) {
+                if (session.needs_second_factor && !canRequestBypassMfa(req)) {
+                    throw new UnauthorizedError({message: messages.missingMfa});
+                }
+            }
+
             return user;
         } catch (err) {
             return null;
