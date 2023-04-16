@@ -30,6 +30,10 @@ export default class UserRoute extends AuthenticatedRoute {
                 this.controller.personalToken = apiKey.id + ':' + apiKey.secret;
                 this.controller.personalTokenRegenerated = false;
             });
+
+            this.store.query('users-second-factor', {id: 'me'}).then((secondFactors) => {
+                this.controller.secondFactors = secondFactors;
+            });
         }
     }
 

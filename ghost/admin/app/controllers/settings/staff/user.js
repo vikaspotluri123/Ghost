@@ -32,6 +32,7 @@ export default class UserController extends Controller {
     @tracked dirtyAttributes = false;
     @tracked personalToken = null;
     @tracked personalTokenRegenerated = false;
+    @tracked secondFactors = null;
     @tracked scratchValues = new TrackedObject();
     @tracked slugValue = null; // not set directly on model to avoid URL changing before save
 
