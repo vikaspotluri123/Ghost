@@ -39,7 +39,8 @@ const messages = {
     userUpdateError: {
         emailIsAlreadyInUse: 'Email is already in use',
         help: 'Visit and save your profile after logging in to check for problems.'
-    }
+    },
+    noSecondFactors: 'No second factors have been registered.'
 };
 
 /**
@@ -233,6 +234,16 @@ User = ghostBookshelf.Model.extend({
             })());
         }
 
+        if (this.hasChanged('mfa_enabled') && this.get('mfa_enabled')) {
+            tasks.verifyMfa = (async function confirmMfa() {
+                const count = await self.second_factors().where('status', 'active').count();
+
+                if (count <= 0) {
+                    throw new errors.ValidationError({message: messages.noSecondFactors});
+                }
+            })();
+        }
+
         /**
          * CASE: add model, hash password
          * CASE: update model, hash password
@@ -301,6 +312,10 @@ User = ghostBookshelf.Model.extend({
 
     sessions: function sessions() {
         return this.hasMany('Session');
+    },
+
+    second_factors: function secondFactors() {
+        return this.hasMany('UsersSecondFactor');
     },
 
     roles: function roles() {
