@@ -728,6 +728,7 @@
                     "milestone_notifications": true,
                     "donation_notifications": true,
                     "status": "inactive",
+                    "mfa_enabled": false,
                     "roles": []
                 },
                 {
@@ -744,6 +745,7 @@
                     "mention_notifications": true,
                     "milestone_notifications": true,
                     "donation_notifications": true,
+                    "mfa_enabled": false,
                     "location": "The Internet",
                     "website": "https://ghost.org",
                     "bio": "You can delete this user to remove all the welcome posts",

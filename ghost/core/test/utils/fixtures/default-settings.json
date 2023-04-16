@@ -60,6 +60,10 @@
             "defaultValue": null,
             "type": "string"
         },
+        "second_factor_secrets": {
+            "defaultValue": null,
+            "type": "object"
+        },
         "members_track_sources": {
             "defaultValue": "true",
             "validations": {

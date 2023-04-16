@@ -1086,6 +1086,7 @@ DataGenerator.forKnex = (function () {
             profile_image: null,
             status: 'active',
             password: 'Sl1m3rson99',
+            mfa_enabled: false,
             created_by: DataGenerator.Content.users[0].id,
             created_at: new Date(),
             updated_at: new Date(),

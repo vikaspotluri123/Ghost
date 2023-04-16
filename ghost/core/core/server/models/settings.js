@@ -60,7 +60,7 @@ function parseDefaultSettings() {
         members_email_auth_secret: () => crypto.randomBytes(64).toString('hex'),
         ghost_public_key: () => getGhostKey('public'),
         ghost_private_key: () => getGhostKey('private'),
-        second_factor: () => getMfaService().syncSecrets()
+        second_factor_secrets: () => getMfaService().syncSecrets()
     };
 
     _.each(defaultSettingsInCategories, function each(settings, categoryName) {
