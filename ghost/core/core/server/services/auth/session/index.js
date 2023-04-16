@@ -36,7 +36,10 @@ const sessionService = createSessionService({
         return models.User.findOne({id, status: 'active'});
     },
     isMfaLabEnabled: () => labs.isSet('multiFactorAuthentication'),
-    canRequestBypassMfa: () => false // @TODO
+    canRequestBypassMfa: (req) => {
+        return (req.method === 'POST' && req.url === '/session/second-factor/') ||
+        (req.method === 'GET' && req.url === '/users/me/second-factors/');
+    }
 });
 
 module.exports = createSessionMiddleware({sessionService});
