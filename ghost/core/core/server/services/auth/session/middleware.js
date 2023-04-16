@@ -5,8 +5,15 @@
 function SessionMiddleware({sessionService}) {
     async function createSession(req, res, next) {
         try {
-            await sessionService.createSessionForUser(req, res, req.user);
-            res.sendStatus(201);
+            const body = await sessionService.createSessionForUser(req, res, req.user);
+
+            // TODO: remove this guard
+            if (body) { // Only available when `multiFactorAuthentication` lab is enabled
+                res.status(201);
+                res.json(body);
+            } else {
+                res.sendStatus(201);
+            }
         } catch (err) {
             next(err);
         }

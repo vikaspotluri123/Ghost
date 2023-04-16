@@ -11,7 +11,7 @@ const messages = {
 /**
  * @typedef {object} User
  * @prop {string} id
- * @prop {boolean} mfa_enabled
+ * @prop {(key: 'mfa_enabled') => boolean} get
  */
 
 /**
@@ -33,7 +33,7 @@ const messages = {
  * @typedef {object} SessionService
  * @prop {(req: Req, res: Res) => Promise<User | null>} getUserForSession
  * @prop {(req: Req, res: Res) => Promise<void>} destroyCurrentSession
- * @prop {(req: Req, res: Res, user: User) => Promise<void>} createSessionForUser
+ * @prop {(req: Req, res: Res, user: User) => Promise<{needs_second_factor: boolean}>} createSessionForUser
  * @prop {(session: Session) => boolean} waitingForSecondFactor
  * @prop {(session: Session) => void} secondFactorVerified
  */
@@ -81,7 +81,7 @@ module.exports = function createSessionService({
      * @param {Req} req
      * @param {Res} res
      * @param {User} user
-     * @returns {Promise<void>}
+     * @returns {Promise<{needs_second_factor: boolean}>}
      */
     async function createSessionForUser(req, res, user) {
         const session = await getSession(req, res);
@@ -97,8 +97,13 @@ module.exports = function createSessionService({
         session.user_agent = req.get('user-agent');
         session.ip = req.ip;
 
-        if (isMfaLabEnabled() && user.mfa_enabled) {
-            session.needs_second_factor = true;
+        if (isMfaLabEnabled()) {
+            if (user.get('mfa_enabled')) {
+                session.needs_second_factor = true;
+                return {needs_second_factor: true};
+            }
+
+            return {needs_second_factor: false};
         }
     }
 
