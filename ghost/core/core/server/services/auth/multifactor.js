@@ -52,7 +52,9 @@ module.exports.createMfaService = () => {
             return {success: true, complete: false, message: messages.emailSent};
         }
 
-        if (!prepareResult) {
+        // CASE: Strategy#prepare provided a response, but we didn't handle it. We can't assume that we can move on
+        // to validation
+        if (prepareResult) {
             throw new errors.InternalServerError({message: 'Unknown validation response', context: prepareResult});
         }
 
