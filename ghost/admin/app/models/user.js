@@ -29,6 +29,7 @@ export default BaseModel.extend(ValidationEngine, {
     createdBy: attr('number'),
     updatedAtUTC: attr('moment-utc'),
     updatedBy: attr('number'),
+    mfaEnabled: attr('boolean'),
     roles: hasMany('role', {
         embedded: 'always',
         async: false
