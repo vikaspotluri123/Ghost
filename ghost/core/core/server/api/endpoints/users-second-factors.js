@@ -164,5 +164,25 @@ module.exports = {
 
             return response;
         }
+    },
+
+    activatePending: {
+        headers: {},
+        options: ['user', 'id'],
+        data: ['proof'],
+        validations: {
+            options: {
+                user: {required: true},
+                id: {required: true},
+                proof: {required: true}
+            }
+        },
+        permissions: permissionOnlySelf,
+        async query(frame) {
+            const model = await models.UsersSecondFactor.findOne({...frame.options, user_id: frame.user.id}, {require: true});
+            const changed = await getMfaService().activatePendingFactor(model, frame.data.proof);
+            this.headers.cacheInvalidate = changed;
+            return model;
+        }
     }
 };

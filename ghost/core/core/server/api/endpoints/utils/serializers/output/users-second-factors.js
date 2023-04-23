@@ -32,5 +32,15 @@ module.exports = {
         };
 
         return frame.response;
+    },
+
+    async activatePending(model, apiImpl, frame) {
+        const mfaService = getMfaService();
+        frame.response = {
+            // If a user can activate a second factor they are considered to be a trusted actor
+            users_second_factors: await mfaService.serializeForApi([model.toJSON()], true)
+        };
+
+        return frame.response;
     }
 };
