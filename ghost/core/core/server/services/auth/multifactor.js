@@ -34,11 +34,11 @@ module.exports.createMfaService = () => {
     }
 
     /**
-     * @param {Parameters<typeof simpleMfa['serialize']>[0][] | import('bookshelf').Model[]} strategies
-     * @param {boolean} isModel
+     * @param {Parameters<typeof simpleMfa['serialize']>[0][]} strategies
+     * @param {boolean} isTrusted
      */
-    function serializeForApi(strategies, isModel = false) {
-        return strategies.map(strategy => simpleMfa.serialize(isModel ? strategy.toJSON() : strategy));
+    function serializeForApi(strategies, isTrusted) {
+        return Promise.all(strategies.map(strategy => simpleMfa.serialize(strategy, isTrusted)));
     }
 
     /**
