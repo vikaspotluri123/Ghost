@@ -108,8 +108,7 @@ module.exports = function apiRoutes() {
 
     router.post('/users/:user/second-factors', mfaEnabled, mw.authAdminApi, http(api.usersSecondFactors.add));
     router.post('/users/:user/second-factors/:id/activate', mfaEnabled, mw.authAdminApi, http(api.usersSecondFactors.activatePending));
-    // @TODO
-    // router.put('/users/:user/second-factors/:id', mfaEnabled, mw.authAdminApi, http(api.usersSecondFactors.edit));
+    router.put('/users/:user/second-factors/:id', mfaEnabled, mw.authAdminApi, http(api.usersSecondFactors.edit));
     router.del('/users/:user/second-factors/:id', mfaEnabled, mw.authAdminApi, http(api.usersSecondFactors.destroy));
 
     // ## Tags

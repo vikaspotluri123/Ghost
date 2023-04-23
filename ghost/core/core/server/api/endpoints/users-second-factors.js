@@ -13,7 +13,8 @@ const messages = {
     factorCountReached: 'You cannot add any more factors',
     minimumCountRequired: 'Cannot delete this second factor - you would not have enough',
     validationRequiresFactorAndProof: 'Missing factor_id or proof',
-    factorIsNotActive: 'Factor is not active; cannot be used to log you in'
+    factorIsNotActive: 'Factor is not active; cannot be used to log you in',
+    mustBeArrayWithOneElement: 'Factor must be an array with 1 element'
 };
 
 function permissionOnlySelf(frame) {
@@ -61,6 +62,42 @@ module.exports = {
         permissions: permissionOnlySelf,
         query(frame) {
             return models.UsersSecondFactor.findOne({...frame.options, user_id: frame.user.id}, {require: true});
+        }
+    },
+
+    edit: {
+        headers: {},
+        options: ['user', 'id'],
+        validation(frame) {
+            // @TODO: move to @tryghost/admin-api-schema
+            if (!Array.isArray(frame.data.users_second_factors) || frame.data.users_second_factors.length !== 1) {
+                throw new errors.ValidationError({message: messages.mustBeArrayWithOneElement});
+            }
+
+            const payload = frame.data.users_second_factors[0];
+            for (const [key, value] of Object.entries(payload)) {
+                if (key === 'description' || key === 'name' || key === 'status') {
+                    if (typeof value !== 'string') {
+                        throw new errors.ValidationError({message: `${key} must be a string`});
+                    }
+
+                    continue;
+                }
+
+                throw new errors.ValidationError({message: `Unknown property: .${key}`});
+            }
+        },
+        permissions: permissionOnlySelf,
+        async query(frame) {
+            const model = await models.UsersSecondFactor.findOne({...frame.options, user_id: frame.user.id}, {require: true});
+            const changes = frame.data.users_second_factors[0];
+            if (Object.hasOwnProperty.call(changes, 'status')) {
+                getMfaService().assertStatusTransition(model.toJSON(), changes.status);
+            }
+
+            await model.save(changes);
+            this.headers.cacheInvalidate = model.wasChanged();
+            return model;
         }
     },
 
