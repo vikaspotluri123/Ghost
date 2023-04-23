@@ -31,6 +31,22 @@ module.exports.createMfaService = () => {
         strategies: defaultStrategies(storageService)
     });
 
+    /**
+     * @param {any} jsonModel
+     * @param {Parameters<typeof simpleMfa['assertStatusTransition']>[1]} nextStatus
+     */
+    function assertStatusTransition(jsonModel, nextStatus) {
+        try {
+            return simpleMfa.assertStatusTransition(jsonModel, nextStatus);
+        } catch (err) {
+            if (isPublicError(err)) {
+                throw new errors.BadRequestError({message: err.message, err});
+            }
+
+            throw new errors.InternalServerError({err});
+        }
+    }
+
     function getSecrets() {
         return settings.get('second_factor_secrets') ?? {};
     }
@@ -96,7 +112,7 @@ module.exports.createMfaService = () => {
             throw new errors.BadRequestError({message});
         }
 
-        simpleMfa.assertStatusTransition(storedStrategy, 'active');
+        assertStatusTransition(storedStrategy, 'active');
         const {complete, message} = await validateSecondFactor(model.toJSON(), proof, true);
 
         if (complete) {
@@ -114,6 +130,7 @@ module.exports.createMfaService = () => {
         serializeForApi,
         defaults: simpleMfa.create,
         share: simpleMfa.share,
+        assertStatusTransition,
         validateSecondFactor,
         syncSecrets,
         isPublicError,
