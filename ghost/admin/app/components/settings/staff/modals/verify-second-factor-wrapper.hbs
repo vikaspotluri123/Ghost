@@ -1,0 +1,17 @@
+<div class="modal-content" data-test-modal="verify-factor-wrapper">
+    <header class="modal-header">
+        <h1>Activate {{@data.factor.name}}</h1>
+    </header>
+    <button type="button" class="close" title="Close" {{on "click" this.close}}>{{svg-jar "close"}}<span
+            class="hidden">Close</span></button>
+
+    <GhAuthMultiFactor::Verify @factor={{@data.factor}}></GhAuthMultiFactor::Verify>
+
+    <div class="modal-footer">
+        <button class="gh-btn" data-test-button="cancel-activate-factor" type="button" {{on "click" this.close}}>
+            <span>Cancel</span>
+        </button>
+        <GhTaskButton @buttonText="Activate Second Factor" @successText="Activated" @task={{this.verifyFactorTask}}
+            @class="gh-btn gh-btn-black gh-btn-icon" data-test-button="execute-activate-factor" />
+    </div>
+</div>

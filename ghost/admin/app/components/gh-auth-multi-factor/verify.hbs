@@ -1,0 +1,29 @@
+{{#if this.error}}
+    <div class="error">{{this.error}}</div>
+{{/if}}
+{{#if (eq @factor.type "otp")}}
+    {{#unless this.isFactorActive}}
+        <div class="verify-otp-qr">
+            QR CODE:
+            {{this.otpUrl}}
+        </div>
+        <div class="verify-otp-plaintext-secret">
+            {{this.otpSecret}}
+        </div>
+    {{/unless}}
+
+    <div class="verify-otp-proof">
+        <label for="otp-verification" class="db">6-digit OTP from your authenticator:</label>
+        <input
+            id="otp-verification"
+            pattern="[0-9]+"
+            type="number"
+            minlength="6"
+            maxlength="6"
+            inputmode="numeric"
+            {{on "input" this.setProof}}
+        />
+    </div>
+{{else}}
+    Error: don't know how to render verification of {{@factor.name}} ("{{@factor.type}}")
+{{/if}}

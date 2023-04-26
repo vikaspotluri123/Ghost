@@ -464,6 +464,15 @@
                             <div class="user-settings-sus">
                                 <h4 class="user-settings-heading">Multi Factor Authentication</h4>
                             </div>
+                            {{#each this.secondFactors as |factor|}}
+                                <div class="user-multi-factor-item {{if (eq factor.status "pending") "second-factor-pending"}} {{if (eq factor.status "disabled") "second-factor-disabled"}}">
+                                    <div class="user-multi-factor-item-name">
+                                        {{factor.name}}
+                                        {{#if (eq factor.status "pending")}}
+                                            <button type="button" class="gh-btn gh-btn-primary" {{on "click" (fn this.proveFactor factor)}}><span>Activate</span></button>
+                                        {{/if}}
+                                    </div>
+                            {{/each}}
                         </div>
                     </div>
                 </div>

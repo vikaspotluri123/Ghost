@@ -16,6 +16,7 @@ import {run} from '@ember/runloop';
 import {inject as service} from '@ember/service';
 import {task, taskGroup, timeout} from 'ember-concurrency';
 import {tracked} from '@glimmer/tracking';
+import VerifySecondFactorModal from '../../../components/settings/staff/modals/verify-second-factor-wrapper';
 
 export default class UserController extends Controller {
     @service ajax;
@@ -353,6 +354,20 @@ export default class UserController extends Controller {
     saveViaKeyboard(event) {
         event.preventDefault();
         this._blurAndTrigger(() => this.saveTask.perform());
+    }
+
+    @action
+    async proveFactor(factor) {
+        const newFactor = await this.modals.open(VerifySecondFactorModal, {factor});
+        if (newFactor) {
+            this.secondFactors = this.secondFactors.map(maybeThisFactor => {
+                if (maybeThisFactor === factor) {
+                    return newFactor;
+                }
+
+                return maybeThisFactor;
+            });
+        }
     }
 
     @task
