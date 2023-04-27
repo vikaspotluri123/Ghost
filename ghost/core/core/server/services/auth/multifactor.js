@@ -6,7 +6,8 @@ const tpl = require('@tryghost/tpl');
 
 const messages = {
     emailSent: 'An email has been sent, please check your email.',
-    factorMustBePendingToVerifyForActivation: 'This second factor is {status}, there is no need to provide verification for activation.'
+    factorMustBePendingToVerifyForActivation: 'This second factor is {status}, there is no need to provide verification for activation.',
+    disablingThisFactorWillLockYouOut: 'Cannot disable the only active factor'
 };
 
 /** @type {ReturnType<typeof module.exports.createMfaService>} */
@@ -126,6 +127,27 @@ module.exports.createMfaService = () => {
         });
     }
 
+    /**
+     * @param {import('bookshelf').Model & {
+     *  get(attr: 'mfa_enabled'): boolean;
+     *  second_factors(): import('bookshelf').Model;
+     * }} user
+     * @param {string} newStatus
+     */
+    async function ensureStatusChangeWillNotCauseLockOut(user, newStatus) {
+        if (!(user.get('mfa_enabled') && newStatus !== 'active')) {
+            return;
+        }
+
+        const activeFactorCount = await user.second_factors()
+            .where({status: 'active'})
+            .count('id');
+
+        if (activeFactorCount <= 1) {
+            throw new errors.BadRequestError({message: messages.disablingThisFactorWillLockYouOut});
+        }
+    }
+
     return {
         serializeForApi,
         defaults: simpleMfa.create,
@@ -134,6 +156,7 @@ module.exports.createMfaService = () => {
         validateSecondFactor,
         syncSecrets,
         isPublicError,
-        activatePendingFactor
+        activatePendingFactor,
+        ensureStatusChangeWillNotCauseLockOut
     };
 };

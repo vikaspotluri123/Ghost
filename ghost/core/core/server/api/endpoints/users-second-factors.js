@@ -92,7 +92,9 @@ module.exports = {
             const model = await models.UsersSecondFactor.findOne({...frame.options, user_id: frame.user.id}, {require: true});
             const changes = frame.data.users_second_factors[0];
             if (Object.hasOwnProperty.call(changes, 'status')) {
-                getMfaService().assertStatusTransition(model.toJSON(), changes.status);
+                const mfaService = getMfaService();
+                mfaService.assertStatusTransition(model.toJSON(), changes.status);
+                await mfaService.ensureStatusChangeWillNotCauseLockOut(frame.user, changes.status);
             }
 
             await model.save(changes);
