@@ -1,46 +1,35 @@
 const {getMfaService} = require('../../../../../services/auth/multifactor.js');
 const {sessionService} = require('../../../../../services/auth/session/index.js');
 
-module.exports = {
-    async browse(models, apiImpl, frame) {
-        const mfaService = getMfaService();
-        const isTrusted = !sessionService.waitingForSecondFactor(frame.original.session);
-        const pojoModels = models.data.map(model => model.toJSON());
-        frame.response = {
-            users_second_factors: await mfaService.serializeForApi(pojoModels, isTrusted),
-            meta: models.meta
-        };
+async function genericSerializer(model, apiImpl, frame) {
+    const mfaService = getMfaService();
+    const isTrusted = !sessionService.waitingForSecondFactor(frame.original.session);
+    const pojoModels = 'data' in model ? model.data.map(singleModel => singleModel.toJSON()) : [model.toJSON()];
 
-        return frame.response;
-    },
+    frame.response = {
+        users_second_factors: await mfaService.serializeForApi(pojoModels, isTrusted)
+    };
 
-    async read(model, apiImpl, frame) {
-        const mfaService = getMfaService();
-        const isUntrusted = sessionService.waitingForSecondFactor(frame.original.session);
-        frame.response = {
-            users_second_factors: await mfaService.serializeForApi([model.toJSON()], isUntrusted)
-        };
-
-        return frame.response;
-    },
-
-    async add(model, apiImpl, frame) {
-        const mfaService = getMfaService();
-        frame.response = {
-            // If a user can add a second factor they are considered to be a trusted actor
-            users_second_factors: await mfaService.serializeForApi([model.toJSON()], true)
-        };
-
-        return frame.response;
-    },
-
-    async activatePending(model, apiImpl, frame) {
-        const mfaService = getMfaService();
-        frame.response = {
-            // If a user can activate a second factor they are considered to be a trusted actor
-            users_second_factors: await mfaService.serializeForApi([model.toJSON()], true)
-        };
-
-        return frame.response;
+    if ('data' in model) {
+        frame.response.meta = model.meta;
     }
+
+    return frame.response;
+}
+
+async function trustedSerializer(model, apiImpl, frame) {
+    const mfaService = getMfaService();
+    frame.response = {
+        users_second_factors: await mfaService.serializeForApi([model.toJSON()], true)
+    };
+
+    return frame.response;
+}
+
+module.exports = {
+    browse: genericSerializer,
+    read: genericSerializer,
+    edit: genericSerializer,
+    add: trustedSerializer, // If a user can add a second factor they are considered to be a trusted actor
+    activatePending: trustedSerializer // If a user can activate a second factor they are considered to be a trusted actor
 };
