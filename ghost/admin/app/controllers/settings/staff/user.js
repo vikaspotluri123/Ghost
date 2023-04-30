@@ -16,7 +16,6 @@ import {action} from '@ember/object';
 import {inject} from 'ghost-admin/decorators/inject';
 import {run} from '@ember/runloop';
 import {inject as service} from '@ember/service';
-import {sort} from '@ember/object/computed';
 import {task, taskGroup, timeout} from 'ember-concurrency';
 import {tracked} from '@glimmer/tracking';
 
@@ -36,16 +35,13 @@ export default class UserController extends Controller {
     @tracked dirtyAttributes = false;
     @tracked personalToken = null;
     @tracked personalTokenRegenerated = false;
-    /** @type {import('ember').Ember.ArrayProxy} */
-    @tracked _unsortedSecondFactors = null;
     @tracked scratchValues = new TrackedObject();
     @tracked slugValue = null; // not set directly on model to avoid URL changing before save
 
-    @sort('_unsortedSecondFactors', (left, right) => {
-        const leftWeight = left.status === 'active' ? 0 : left.status === 'pending' ? 1 : 2;
-        const rightWeight = right.status === 'active' ? 0 : left.status === 'pending' ? 1 : 2;
-        return leftWeight - rightWeight;
-    }) secondFactors;
+    /** @type {import('ember').Ember.ArrayProxy} */
+    _unsortedSecondFactors = null;
+    /** @type {import('ember').Ember.ArrayProxy} */
+    @tracked secondFactors;
 
     /**
      * @type {{
@@ -468,15 +464,23 @@ export default class UserController extends Controller {
     }
 
     _computeSecondFactorLogic() {
+        this.secondFactors = Array.from({length: this._unsortedSecondFactors.length});
         let activeSecondFactorCount = 0;
         let verifiedSecondFactorCount = 0;
-        this._unsortedSecondFactors.forEach((factor) => {
+        this._unsortedSecondFactors.forEach((factor, index) => {
+            this.secondFactors[index] = factor;
             if (factor.status === 'active') {
                 activeSecondFactorCount += 1;
                 verifiedSecondFactorCount += 1;
             } else if (factor.status === 'disabled') {
                 verifiedSecondFactorCount += 1;
             }
+        });
+
+        this.secondFactors.sort((left, right) => {
+            const leftWeight = left.status === 'active' ? 0 : left.status === 'pending' ? 1 : 2;
+            const rightWeight = right.status === 'active' ? 0 : left.status === 'pending' ? 1 : 2;
+            return leftWeight - rightWeight;
         });
 
         this._computedSecondFactorLogic = {
