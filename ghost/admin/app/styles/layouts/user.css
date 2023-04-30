@@ -70,16 +70,53 @@
     color: #fff;
 }
 
+.user-multi-factor-form,
 .user-details-bottom,
 .user-details-form {
     max-width: 540px;
     margin: 2vw auto 0;
 }
 
+.user-multi-factor-form,
 .user-details-form {
     border-top: 1px solid var(--lightgrey);
     padding-top: 4vw;
     margin-bottom: -2vw;
+}
+
+.user-multi-factor-heading {
+    display: flex;
+    margin-bottom: 3rem;
+}
+
+.user-multi-factor-heading h4 {
+    flex: 1;
+    font-size: 1.55rem;
+    font-weight: 700;
+    line-height: 1.3em;
+}
+
+.user-multi-factor-item {
+    display: block;
+    padding: 1vw 0;
+}
+
+.user-multi-factor-item + .user-multi-factor-item {
+    border-top: 1px solid var(--lightgrey);
+}
+
+.user-multi-factor-item-name {
+    line-height: 34px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.user-multi-factor-item-name button {
+    background-color: transparent;
+}
+
+.user-multi-factor-item-name button:hover {
+    background-color: transparent;
 }
 
 
@@ -100,6 +137,8 @@
 .user-profile textarea {
     min-width: 100%;
 }
+
+
 
 
 /* Profile picture
@@ -205,6 +244,21 @@
 
 .user-setting-toggle p {
     margin-top: 0;
+}
+
+.user-mfa-toggle {
+    margin-top: 0;
+}
+
+.user-mfa-toggle .for-switch {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-mfa-toggle .for-switch .disabled,
+.user-mfa-toggle .for-switch .disabled .input-toggle-component {
+    cursor: not-allowed;
 }
 
 .user-settings-subgroup .for-switch {

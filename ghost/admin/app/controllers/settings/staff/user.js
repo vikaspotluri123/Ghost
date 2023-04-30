@@ -1,4 +1,5 @@
 import Controller from '@ember/controller';
+import DeleteSecondFactorModal from '../../../components/settings/staff/modals/delete-second-factor';
 import DeleteUserModal from '../../../components/settings/staff/modals/delete-user';
 import RegenerateStaffTokenModal from '../../../components/settings/staff/modals/regenerate-staff-token';
 import SelectRoleModal from '../../../components/settings/staff/modals/select-role';
@@ -6,6 +7,7 @@ import SuspendUserModal from '../../../components/settings/staff/modals/suspend-
 import TransferOwnershipModal from '../../../components/settings/staff/modals/transfer-ownership';
 import UnsuspendUserModal from '../../../components/settings/staff/modals/unsuspend-user';
 import UploadImageModal from '../../../components/settings/staff/modals/upload-image';
+import VerifySecondFactorModal from '../../../components/settings/staff/modals/verify-second-factor-wrapper';
 import copyTextToClipboard from 'ghost-admin/utils/copy-text-to-clipboard';
 import isNumber from 'ghost-admin/utils/isNumber';
 import windowProxy from 'ghost-admin/utils/window-proxy';
@@ -14,15 +16,16 @@ import {action} from '@ember/object';
 import {inject} from 'ghost-admin/decorators/inject';
 import {run} from '@ember/runloop';
 import {inject as service} from '@ember/service';
+import {sort} from '@ember/object/computed';
 import {task, taskGroup, timeout} from 'ember-concurrency';
 import {tracked} from '@glimmer/tracking';
-import VerifySecondFactorModal from '../../../components/settings/staff/modals/verify-second-factor-wrapper';
 
 export default class UserController extends Controller {
     @service ajax;
     @service ghostPaths;
     @service membersUtils;
     @service modals;
+    /** @type {import('../../../services/notifications.js')} */
     @service notifications;
     @service session;
     @service slugGenerator;
@@ -33,9 +36,35 @@ export default class UserController extends Controller {
     @tracked dirtyAttributes = false;
     @tracked personalToken = null;
     @tracked personalTokenRegenerated = false;
-    @tracked secondFactors = null;
+    /** @type {import('ember').Ember.ArrayProxy} */
+    @tracked _unsortedSecondFactors = null;
     @tracked scratchValues = new TrackedObject();
     @tracked slugValue = null; // not set directly on model to avoid URL changing before save
+
+    @sort('_unsortedSecondFactors', (left, right) => {
+        const leftWeight = left.status === 'active' ? 0 : left.status === 'pending' ? 1 : 2;
+        const rightWeight = right.status === 'active' ? 0 : left.status === 'pending' ? 1 : 2;
+        return leftWeight - rightWeight;
+    }) secondFactors;
+
+    /**
+     * @type {{
+     * ref: unknown;
+     * hasOnlyOneActiveFactor: boolean;
+     * canEnableMfa: boolean;
+     * canAddSecondFactor: boolean;
+     * }}
+     */
+    @tracked _computedSecondFactorLogic = {};
+
+    set unsortedSecondFactors(factorList) {
+        this._unsortedSecondFactors = factorList;
+        this._computeSecondFactorLogic();
+    }
+
+    get unsortedSecondFactors() {
+        return this._unsortedSecondFactors;
+    }
 
     get user() {
         return this.model;
@@ -100,6 +129,22 @@ export default class UserController extends Controller {
         }
 
         return false;
+    }
+
+    get hasOnlyOneActiveFactor() {
+        return this._computedSecondFactorLogic.hasOnlyOneActiveFactor;
+    }
+
+    get hasOnlyOneVerifiedFactor() {
+        return this._computedSecondFactorLogic.hasOnlyOneVerifiedFactor;
+    }
+
+    get canEnableMfa() {
+        return this._computedSecondFactorLogic.canEnableMfa;
+    }
+
+    get canAddSecondFactor() {
+        return this._computedSecondFactorLogic.canAddSecondFactor;
     }
 
     @action
@@ -356,17 +401,47 @@ export default class UserController extends Controller {
         this._blurAndTrigger(() => this.saveTask.perform());
     }
 
+    @action toggleMfa(event) {
+        this.user.mfaEnabled = event.target.checked;
+    }
+
     @action
     async proveFactor(factor) {
         const newFactor = await this.modals.open(VerifySecondFactorModal, {factor});
         if (newFactor) {
-            this.secondFactors = this.secondFactors.map(maybeThisFactor => {
+            this.unsortedSecondFactors = this.unsortedSecondFactors.map((maybeThisFactor) => {
                 if (maybeThisFactor === factor) {
                     return newFactor;
                 }
 
                 return maybeThisFactor;
             });
+        }
+    }
+
+    @action
+    toggleFactorEnablement(factor) {
+        return this.setFactorStatus.perform(factor, factor.status === 'active' ? 'disabled' : 'active');
+    }
+
+    @action
+    async deleteSecondFactor(factor) {
+        const deleted = await this.modals.open(DeleteSecondFactorModal, {factor});
+        if (deleted) {
+            this.unsortedSecondFactors = this.unsortedSecondFactors.filter(maybeDeleted => maybeDeleted !== factor);
+        }
+    }
+
+    @task
+    *setFactorStatus(factor, status) {
+        const originalStatus = factor.status;
+        factor.status = status;
+        try {
+            yield factor.save();
+            this._computeSecondFactorLogic();
+        } catch (error) {
+            this.notifications.showAPIError(error, {key: 'user.update'});
+            factor.status = originalStatus;
         }
     }
 
@@ -390,5 +465,25 @@ export default class UserController extends Controller {
             focusedElement?.focus();
             fn();
         });
+    }
+
+    _computeSecondFactorLogic() {
+        let activeSecondFactorCount = 0;
+        let verifiedSecondFactorCount = 0;
+        this._unsortedSecondFactors.forEach((factor) => {
+            if (factor.status === 'active') {
+                activeSecondFactorCount += 1;
+                verifiedSecondFactorCount += 1;
+            } else if (factor.status === 'disabled') {
+                verifiedSecondFactorCount += 1;
+            }
+        });
+
+        this._computedSecondFactorLogic = {
+            hasOnlyOneActiveFactor: activeSecondFactorCount === 1,
+            hasOnlyOneVerifiedFactor: verifiedSecondFactorCount === 1,
+            canEnableMfa: activeSecondFactorCount > 0,
+            canAddSecondFactor: this._unsortedSecondFactors.length < 15
+        };
     }
 }

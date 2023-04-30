@@ -32,7 +32,7 @@ export default class UserRoute extends AuthenticatedRoute {
             });
 
             this.store.query('users-second-factor', {id: 'me'}).then((secondFactors) => {
-                this.controller.secondFactors = secondFactors;
+                this.controller.unsortedSecondFactors = secondFactors;
             });
         }
     }

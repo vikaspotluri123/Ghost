@@ -460,18 +460,55 @@
             {{#if this.isOwnProfile}}
                 <div class="user-profile">
                     <div class="pa5">
-                        <div class="user-details-form">
-                            <div class="user-settings-sus">
-                                <h4 class="user-settings-heading">Multi Factor Authentication</h4>
+                        <div class="user-multi-factor-form">
+                            <div class="user-multi-factor-heading">
+                                <h4>Multi Factor Authentication</h4>
+                                <div class="user-setting-toggle user-mfa-toggle">
+                                    <div class="for-switch small">
+                                        {{#unless this.canEnableMfa}}
+                                            {{svg-jar "help" class="w4 h4 stroke-midgrey" title="You need at least 1 active second factor to enable MFA"}}
+                                        {{/unless}}
+                                        <label class="switch {{unless this.canEnableMfa "disabled"}}" for="multifactor">
+                                            <input id="multifactor" type="checkbox" checked={{this.user.mfaEnabled}}
+                                                class="gh-input" {{on "change" this.toggleMfa}}
+                                                disabled={{not this.canEnableMfa}}
+                                                data-test-checkbox="multifactor">
+                                            <span class="input-toggle-component"></span>
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
+                            {{#if this.canCreateSecondFactor}}
+                                <button type="button" class=""></button>
+                            {{/if}}
                             {{#each this.secondFactors as |factor|}}
                                 <div class="user-multi-factor-item {{if (eq factor.status "pending") "second-factor-pending"}} {{if (eq factor.status "disabled") "second-factor-disabled"}}">
                                     <div class="user-multi-factor-item-name">
                                         {{factor.name}}
-                                        {{#if (eq factor.status "pending")}}
-                                            <button type="button" class="gh-btn gh-btn-primary" {{on "click" (fn this.proveFactor factor)}}><span>Activate</span></button>
-                                        {{/if}}
+
+                                        <button
+                                            disabled={{and this.user.mfaEnabled this.hasOnlyOneActiveFactor (eq factor.status "active")}}
+                                            type="button" class="gh-btn gh-btn-hover-red gh-btn-icon"
+                                            {{on "click" (fn this.deleteSecondFactor factor)}}
+                                        >
+                                            <span>{{svg-jar "trash" class="w6 h6 stroke-midgrey"}}</span>
+                                        </button>
                                     </div>
+
+                                    {{#if (eq factor.status "pending")}}
+                                        <button type="button" class="gh-btn gh-btn-primary" {{on "click" (fn this.proveFactor factor)}}><span>Activate</span></button>
+                                    {{else if (not this.hasOnlyOneVerifiedFactor)}}
+                                        <div class="user-setting-toggle user-mfa-toggle">
+                                            <div class="for-switch small {{if (and this.hasOnlyOneActiveFactor (eq factor.status "active")) "disabled"}}">
+                                                <label class="switch" for="factor-active-{{factor.id}}">
+                                                    <input id="factor-active-{{factor.id}}" type="checkbox" checked={{eq factor.status "active"}} class="gh-input" {{on "change"
+                                                        (fn this.toggleFactorEnablement factor)}} disabled={{and this.hasOnlyOneActiveFactor (eq factor.status "active")}} data-test-checkbox="factor-active">
+                                                    <span class="input-toggle-component"></span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    {{/if}}
+                                </div>
                             {{/each}}
                         </div>
                     </div>
