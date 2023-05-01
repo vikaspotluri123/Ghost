@@ -150,19 +150,23 @@ module.exports = function createSessionService({
             return null;
         }
 
+        /** @type {Awaited<ReturnType<typeof findUserById>>} */
+        let user;
+
         try {
-            const user = await findUserById({id: session.user_id});
-
-            if (isMfaLabEnabled()) {
-                if (session.needs_second_factor && !canRequestBypassMfa(req)) {
-                    throw new UnauthorizedError({message: messages.missingMfa});
-                }
-            }
-
-            return user;
+            user = await findUserById({id: session.user_id});
         } catch (err) {
             return null;
         }
+
+        // NOTE: This is after the try/catch block because we the message and code needs to be be sent to the client
+        if (isMfaLabEnabled()) {
+            if (session.needs_second_factor && !canRequestBypassMfa(req)) {
+                throw new UnauthorizedError({message: messages.missingMfa, code: 'MFA_REQUIRED'});
+            }
+        }
+
+        return user;
     }
 
     /** @param {Session} session */
