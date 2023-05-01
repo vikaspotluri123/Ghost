@@ -484,7 +484,10 @@
                             {{#each this.secondFactors as |factor|}}
                                 <div class="user-multi-factor-item {{if (eq factor.status "pending") "second-factor-pending"}} {{if (eq factor.status "disabled") "second-factor-disabled"}}">
                                     <div class="user-multi-factor-item-name">
-                                        {{factor.name}}
+                                        <div>
+                                            {{factor.name}}
+                                            <small><span class="ml2 pt1 pr2 pb1 pl2 br-pill bg-darkgrey white">{{factor.niceType}}</span></small>
+                                        </div>
 
                                         <button
                                             disabled={{and this.user.mfaEnabled this.hasOnlyOneActiveFactor (eq factor.status "active")}}
