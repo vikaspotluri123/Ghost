@@ -478,9 +478,6 @@
                                     </div>
                                 </div>
                             </div>
-                            {{#if this.canAddSecondFactor}}
-                                <button type="button" class="gh-btn gh-btn-primary" {{on "click" this.showAddFactorModal}}>Add new Second Factor</button>
-                            {{/if}}
                             {{#each this.secondFactors as |factor|}}
                                 <div class="user-multi-factor-item {{if (eq factor.status "pending") "second-factor-pending"}} {{if (eq factor.status "disabled") "second-factor-disabled"}}">
                                     <div class="user-multi-factor-item-name">
@@ -513,6 +510,13 @@
                                     {{/if}}
                                 </div>
                             {{/each}}
+                            {{#if this.canAddSecondFactor}}
+                                <div class="flex justify-center mt4">
+                                    <button type="button" class="dib pa2 gh-btn gh-btn-primary" {{on "click" this.showAddFactorModal}}>
+                                        Add new Second Factor
+                                    </button>
+                                </div>
+                            {{/if}}
                         </div>
                     </div>
                 </div>
