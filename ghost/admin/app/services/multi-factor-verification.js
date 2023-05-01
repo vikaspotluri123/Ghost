@@ -6,6 +6,7 @@ export default class MultiFactorVerificationService extends Service {
     /** @type {ReturnType<import('../utils/ghost-paths.js').default>} */
     @service ghostPaths;
     @service ajax;
+    @service store;
 
     _proof = '';
     _factor = null;
@@ -37,7 +38,20 @@ export default class MultiFactorVerificationService extends Service {
                 throw new Error('Factor probably activated, but unable to understand the response');
             }
 
-            return response.users_second_factors[0];
+            const jsonModel = response.users_second_factors[0];
+            const attributes = {...jsonModel};
+            delete attributes.id;
+
+            const record = this.store.push({
+                data: [{
+                    id: jsonModel.id,
+                    type: 'users-second-factor',
+                    attributes,
+                    relationships: {}
+                }]
+            });
+
+            return record[0];
         }).catch((error) => {
             const originalError = error.payload?.errors[0];
             throw originalError || error;
