@@ -32,4 +32,9 @@ export default class GhMultiFactorVerify extends Component {
     get otpSecret() {
         return this.args.factor.context.toUpperCase();
     }
+
+    @action
+    acknowledgeBackupCodes() {
+        this.multiFactorVerification.setProof(this.args.factor);
+    }
 }

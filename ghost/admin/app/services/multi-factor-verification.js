@@ -24,8 +24,27 @@ export default class MultiFactorVerificationService extends Service {
     }
 
     verify() {
-        if (!this._factor || !this._proof.match(/^\d{6}$/)) {
-            throw new Error('OTP must be 6 digits');
+        if (!this._factor) {
+            throw new Error('Something went wrong - factor is missing internally');
+        }
+
+        const forActivation = this._factor.status === 'pending';
+
+        if (this._factor.type === 'otp') {
+            if (!this._proof.match(/^\d{6}$/)) {
+                throw new Error('OTP must be 6 digits');
+            }
+        } else if (this._factor.type === 'backup-code') {
+            if (forActivation) {
+                this._proof = 'acknowledged';
+            } else {
+                const originalProof = this._proof;
+                this._proof = this._proof.replace(/\D/g, '');
+                if (!this._proof.match(/^\d{12}$/)) {
+                    this._proof = originalProof;
+                    throw new Error(`Backup code must be 12 digits, optionally with dashes (-) in between`);
+                }
+            }
         }
 
         const url = this.ghostPaths.url.api('/users/me/second-factors', this._factor.id, 'activate');

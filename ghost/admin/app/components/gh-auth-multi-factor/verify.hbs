@@ -24,6 +24,22 @@
             {{on "input" this.setProof}}
         />
     </div>
+{{else if (eq @factor.type "backup-code")}}
+    {{#if this.isFactorActive}}
+        <label for="backup-verification" class="db">Enter your backup code:</label>
+        <input
+            id="backup-verification"
+            pattern="[0-9-]+"
+            type="number"
+            minlength="12"
+            maxlength="15"
+            inputmode="numeric"
+            {{on "input" this.setProof}}
+        />
+    {{else}}
+        Take a note of these backup codes. They won't be shown again!
+        <pre {{did-insert this.acknowledgeBackupCodes}}>{{#each @factor.context as |backupCode|}}<div>{{backupCode}}</div>{{/each}}</pre>
+    {{/if}}
 {{else}}
     Error: don't know how to render verification of {{@factor.name}} ("{{@factor.type}}")
 {{/if}}
