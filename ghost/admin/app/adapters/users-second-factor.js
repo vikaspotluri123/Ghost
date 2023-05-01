@@ -1,6 +1,7 @@
 import ApplicationAdapter from './application';
 
 export default class UserSecondFactor extends ApplicationAdapter {
+    urlForCreateRecord = () => this._urlBuilder();
     urlForUpdateRecord = this._urlBuilder;
     urlForDeleteRecord = this._urlBuilder;
 

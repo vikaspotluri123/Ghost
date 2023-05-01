@@ -1,0 +1,98 @@
+<form class="modal-content" data-test-modal="create-factor" {{did-insert this.storeElement}}>
+    <header class="modal-header">
+        {{#if (eq this.step 1)}}
+            <h1>Add a second factor</h1>
+        {{else}}
+            <h1>Activate {{this.factor.name}}</h1>
+        {{/if}}
+    </header>
+    <button type="button" class="close" title="Close" {{on "click" this.close}}>{{svg-jar "close"}}<span
+            class="hidden">Close</span></button>
+
+    {{#if (eq this.step 1)}}
+        <div>
+            <fieldset class="modal-body">
+                <div>
+                    <div>
+                        <label for="factor-name">Name</label>
+                        <GhTextInput
+                            @name="factor-name"
+                            @id="factor-name"
+                            {{on "input" (fn this.setModelProperty "name")}}
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label for="factor-description">Description <small>(optional)</small></label>
+                        <GhTextInput
+                            @name="factor-description"
+                            @id="factor-description"
+                            {{on "input" (fn this.setModelProperty "description")}}
+                        />
+                    </div>
+                </div>
+
+                <div>
+                    <div>
+                        <label for="factor-type">What type of second factor do you want to add?</label>
+                    </div>
+
+                    {{#if @data.allowEmail}}
+                        <div>
+                            <input type="radio" id="factor-magic-link" name="factor-type" value="magic-link"
+                                {{on "change" this.updateType}} />
+                            <label class="dib" for="factor-magic-link">Magic Link</label>
+                        </div>
+                    {{/if}}
+
+                    {{#if @data.allowBackupCode}}
+                        <div>
+                            <input type="radio" id="factor-backup-codes" name="factor-type" value="backup-code"
+                                {{on "change" this.updateType}} />
+                            <label class="dib" for="factor-magic-link">Backup Codes</label>
+                        </div>
+                    {{/if}}
+
+                    <div>
+                        {{! Place required on the OTP option because it will always be visible}}
+                        <input
+                            type="radio"
+                            id="factor-otp"
+                            name="factor-type"
+                            value="otp"
+                            checked={{and (not @data.allowEmail) (not @data.allowBackupCode)}}
+                            required
+                            {{on "change" this.updateType}}
+                        />
+                        <label class="dib" for="factor-otp">Authenticator App</label>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+
+        <div class="modal-footer">
+            <button class="gh-btn" data-test-button="cancel-create-factor" type="button" {{on "click" this.close}}>
+                <span>Cancel</span>
+            </button>
+            <GhTaskButton
+                @type="submit"
+                @buttonText="Create Second Factor"
+                @runningText="Creating Second Factor..."
+                @showSuccess={{false}}
+                @task={{this.createFactorTask}}
+                @class="gh-btn gh-btn-primary gh-btn-icon"
+                data-test-button="confirm-create-factor"
+            />
+        </div>
+    {{else}}
+        <GhAuthMultiFactor::Verify @factor={{this.factor}}></GhAuthMultiFactor::Verify>
+        <div class="modal-footer">
+            <button class="gh-btn" data-test-button="cancel-create-factor" type="button" {{on "click" this.close}}>
+                <span>Cancel</span>
+            </button>
+            <GhTaskButton @buttonText="Activate" @runningText="Activating..."
+                @showSuccess={{false}} @task={{this.verifyFactorTask}} @class="gh-btn gh-btn-primary gh-btn-icon"
+                data-test-button="activate-create-factor" />
+        </div>
+    {{/if}}
+</form>

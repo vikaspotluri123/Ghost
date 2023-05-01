@@ -1,3 +1,4 @@
+import AddSecondFactorModal from '../../../components/settings/staff/modals/add-second-factor';
 import Controller from '@ember/controller';
 import DeleteSecondFactorModal from '../../../components/settings/staff/modals/delete-second-factor';
 import DeleteUserModal from '../../../components/settings/staff/modals/delete-user';
@@ -49,6 +50,8 @@ export default class UserController extends Controller {
      * hasOnlyOneActiveFactor: boolean;
      * canEnableMfa: boolean;
      * canAddSecondFactor: boolean;
+     * hasEmailFactor: boolean;
+     * hasBackupFactor: boolean;
      * }}
      */
     @tracked _computedSecondFactorLogic = {};
@@ -421,6 +424,19 @@ export default class UserController extends Controller {
     }
 
     @action
+    async showAddFactorModal() {
+        const factor = await this.modals.open(AddSecondFactorModal, {
+            allowEmail: !this._computedSecondFactorLogic.hasEmailFactor,
+            allowBackupCode: !this._computedSecondFactorLogic.hasBackupFactor
+        });
+
+        if (factor) {
+            this.unsortedSecondFactors.addObject(factor);
+            this._computeSecondFactorLogic();
+        }
+    }
+
+    @action
     async deleteSecondFactor(factor) {
         const deleted = await this.modals.open(DeleteSecondFactorModal, {factor});
         if (deleted) {
@@ -467,6 +483,8 @@ export default class UserController extends Controller {
         this.secondFactors = Array.from({length: this._unsortedSecondFactors.length});
         let activeSecondFactorCount = 0;
         let verifiedSecondFactorCount = 0;
+        let hasEmailFactor = false;
+        let hasBackupFactor = false;
         this._unsortedSecondFactors.forEach((factor, index) => {
             this.secondFactors[index] = factor;
             if (factor.status === 'active') {
@@ -475,6 +493,9 @@ export default class UserController extends Controller {
             } else if (factor.status === 'disabled') {
                 verifiedSecondFactorCount += 1;
             }
+
+            hasEmailFactor ||= factor.type === 'magic-link';
+            hasBackupFactor ||= factor.type === 'backup-code';
         });
 
         this.secondFactors.sort((left, right) => {
@@ -487,7 +508,9 @@ export default class UserController extends Controller {
             hasOnlyOneActiveFactor: activeSecondFactorCount === 1,
             hasOnlyOneVerifiedFactor: verifiedSecondFactorCount === 1,
             canEnableMfa: activeSecondFactorCount > 0,
-            canAddSecondFactor: this._unsortedSecondFactors.length < 15
+            canAddSecondFactor: this._unsortedSecondFactors.length < 15,
+            hasEmailFactor,
+            hasBackupFactor
         };
     }
 }

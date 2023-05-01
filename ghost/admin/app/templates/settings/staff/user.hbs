@@ -478,8 +478,8 @@
                                     </div>
                                 </div>
                             </div>
-                            {{#if this.canCreateSecondFactor}}
-                                <button type="button" class=""></button>
+                            {{#if this.canAddSecondFactor}}
+                                <button type="button" class="gh-btn gh-btn-primary" {{on "click" this.showAddFactorModal}}>Add new Second Factor</button>
                             {{/if}}
                             {{#each this.secondFactors as |factor|}}
                                 <div class="user-multi-factor-item {{if (eq factor.status "pending") "second-factor-pending"}} {{if (eq factor.status "disabled") "second-factor-disabled"}}">
