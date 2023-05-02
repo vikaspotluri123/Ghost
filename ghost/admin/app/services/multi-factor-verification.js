@@ -2,6 +2,18 @@ import Service, {inject as service} from '@ember/service';
 import {action} from '@ember/object';
 import {tracked} from '@glimmer/tracking';
 
+export const FactorType = {
+    backupCode: 'backup-code',
+    OTP: 'otp',
+    magicLink: 'magic-link'
+};
+
+export const FactorStatus = {
+    pending: 'pending',
+    active: 'active',
+    disabled: 'disabled'
+};
+
 export default class MultiFactorVerificationService extends Service {
     /** @type {ReturnType<import('../utils/ghost-paths.js').default>} */
     @service ghostPaths;
@@ -30,11 +42,11 @@ export default class MultiFactorVerificationService extends Service {
 
         const forActivation = this._factor.status === 'pending';
 
-        if (this._factor.type === 'otp') {
+        if (this._factor.type === FactorType.OTP) {
             if (!this._proof.match(/^\d{6}$/)) {
                 throw new Error('OTP must be 6 digits');
             }
-        } else if (this._factor.type === 'backup-code') {
+        } else if (this._factor.type === FactorType.backupCode) {
             if (forActivation) {
                 this._proof = 'acknowledged';
             } else {

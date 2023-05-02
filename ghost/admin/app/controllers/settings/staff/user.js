@@ -12,6 +12,7 @@ import VerifySecondFactorModal from '../../../components/settings/staff/modals/v
 import copyTextToClipboard from 'ghost-admin/utils/copy-text-to-clipboard';
 import isNumber from 'ghost-admin/utils/isNumber';
 import windowProxy from 'ghost-admin/utils/window-proxy';
+import {FactorStatus, FactorType} from '../../../services/multi-factor-verification';
 import {TrackedObject} from 'tracked-built-ins';
 import {action} from '@ember/object';
 import {inject} from 'ghost-admin/decorators/inject';
@@ -420,7 +421,10 @@ export default class UserController extends Controller {
 
     @action
     toggleFactorEnablement(factor) {
-        return this.setFactorStatus.perform(factor, factor.status === 'active' ? 'disabled' : 'active');
+        return this.setFactorStatus.perform(
+            factor,
+            factor.status === FactorStatus.active ? FactorStatus.disabled : FactorStatus.active
+        );
     }
 
     @action
@@ -487,20 +491,20 @@ export default class UserController extends Controller {
         let hasBackupFactor = false;
         this._unsortedSecondFactors.forEach((factor, index) => {
             this.secondFactors[index] = factor;
-            if (factor.status === 'active') {
+            if (factor.status === FactorStatus.active) {
                 activeSecondFactorCount += 1;
                 verifiedSecondFactorCount += 1;
-            } else if (factor.status === 'disabled') {
+            } else if (factor.status === FactorStatus.disabled) {
                 verifiedSecondFactorCount += 1;
             }
 
-            hasEmailFactor ||= factor.type === 'magic-link';
-            hasBackupFactor ||= factor.type === 'backup-code';
+            hasEmailFactor ||= factor.type === FactorType.magicLink;
+            hasBackupFactor ||= factor.type === FactorType.backupCode;
         });
 
         this.secondFactors.sort((left, right) => {
-            const leftWeight = left.status === 'active' ? 0 : left.status === 'pending' ? 1 : 2;
-            const rightWeight = right.status === 'active' ? 0 : left.status === 'pending' ? 1 : 2;
+            const leftWeight = left.status === FactorStatus.active ? 0 : left.status === FactorStatus.pending ? 1 : 2;
+            const rightWeight = right.status === FactorStatus.active ? 0 : left.status === FactorStatus.pending ? 1 : 2;
             return leftWeight - rightWeight;
         });
 
