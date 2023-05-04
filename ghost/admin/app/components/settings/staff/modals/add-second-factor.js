@@ -7,6 +7,7 @@ import {tracked} from '@glimmer/tracking';
 export default class CreateSecondFactorModal extends Component {
     @service notifications;
     @service store;
+    /** @type {import('../../../../services/multi-factor-verification.js').default} */
     @service multiFactorVerification;
 
     /**
@@ -80,7 +81,7 @@ export default class CreateSecondFactorModal extends Component {
         }
 
         try {
-            const factor = yield this.multiFactorVerification.verify();
+            const factor = yield this.multiFactorVerification.activate();
             this.args.close(factor);
         } catch (error) {
             this.multiFactorVerification.setError(error.message);

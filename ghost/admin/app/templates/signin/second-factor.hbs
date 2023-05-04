@@ -1,6 +1,45 @@
 <div class="gh-flow">
     <div class="gh-flow-content-wrap">
         <section class="gh-flow-content">
+            <form id="second-factor" method="post" class="gh-signin gh-mfa" novalidate="novalidate" {{did-insert this.storeForm}}>
+                <header>
+                    <div class="gh-site-icon" style={{site-icon-style}}></div>
+                    <h1>Confirm Access to {{this.config.blogTitle}}.</h1>
+                </header>
+                {{#if (eq this.activeView 1)}}
+                    {{#if this.selectedFactor}}
+                        <GhAuthMultiFactor::Verify
+                            @factor={{this.selectedFactor}}
+                            @showError={{false}}
+                            @frozen={{not this.userCanDoSomething}}
+                        ></GhAuthMultiFactor::Verify>
+                    {{else if this.userCanDoSomething}}
+                        Loading second factors...
+                    {{/if}}
+                    <GhTaskButton
+                        @type="submit"
+                        @class="login gh-btn gh-btn-login gh-btn-block gh-btn-icon"
+                        @task={{this.submitTask}}
+                        @disabled={{not this.userCanDoSomething}}
+                    >
+                        Submit
+                    </GhTaskButton>
+                    {{#if this.canSelectAnotherFactor}}
+                        <button class="gh-mfa-change-factor" type="button" {{on "click" this.selectFactor}}>use a different factor</button>
+                    {{/if}}
+                {{else if (eq this.activeView 2)}}
+                    Select a second factor
+                    {{#each this.secondFactors as |factor index|}}
+                        <div>
+                            <button type="button" {{on "click" (fn this.setSelectedFactor index)}}>
+                                {{factor.name}} ({{factor.niceType}})
+                            </button>
+                        </div>
+                    {{/each}}
+                {{/if}}
+            </form>
+
+            <p class="main-error">{{this.multiFactorVerification.error}}&nbsp;</p>
         </section>
     </div>
 </div>

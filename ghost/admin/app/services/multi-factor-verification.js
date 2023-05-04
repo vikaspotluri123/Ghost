@@ -19,6 +19,8 @@ export default class MultiFactorVerificationService extends Service {
     @service ghostPaths;
     @service ajax;
     @service store;
+    /** @type {import('./session.js').default} */
+    @service session;
 
     _proof = '';
     _factor = null;
@@ -35,28 +37,19 @@ export default class MultiFactorVerificationService extends Service {
         this.error = error;
     }
 
-    verify() {
-        if (!this._factor) {
-            throw new Error('Something went wrong - factor is missing internally');
+    activate() {
+        this._assertFactor();
+
+        // CASE: somehow the factor was requested to be verified but it's already verified.
+        if (this._factor.status !== FactorStatus.pending) {
+            // @TODO: Return a model
+            return this._factor;
         }
 
-        const forActivation = this._factor.status === 'pending';
-
         if (this._factor.type === FactorType.OTP) {
-            if (!this._proof.match(/^\d{6}$/)) {
-                throw new Error('OTP must be 6 digits');
-            }
+            this._checkOtp();
         } else if (this._factor.type === FactorType.backupCode) {
-            if (forActivation) {
-                this._proof = 'acknowledged';
-            } else {
-                const originalProof = this._proof;
-                this._proof = this._proof.replace(/\D/g, '');
-                if (!this._proof.match(/^\d{12}$/)) {
-                    this._proof = originalProof;
-                    throw new Error(`Backup code must be 12 digits, optionally with dashes (-) in between`);
-                }
-            }
+            this._proof = 'acknowledged';
         }
 
         const url = this.ghostPaths.url.api('/users/me/second-factors', this._factor.id, 'activate');
@@ -87,6 +80,58 @@ export default class MultiFactorVerificationService extends Service {
             const originalError = error.payload?.errors[0];
             throw originalError || error;
         });
+    }
+
+    verify() {
+        this._assertFactor();
+        if (this._factor.type === FactorType.OTP) {
+            this._checkOtp();
+        } else if (this._factor.type === FactorType.backupCode) {
+            const originalProof = this._proof;
+            this._proof = this._proof.replace(/\D/g, '');
+            if (!this._proof.match(/^\d{12}$/)) {
+                this._proof = originalProof;
+                throw new Error(`Backup code must be 12 digits, optionally with dashes (-) in between`);
+            }
+        }
+
+        const url = this.ghostPaths.url.api('/session/second-factor');
+        return this.ajax.post((url), {
+            data: {factor_id: this._factor.id, proof: this._proof},
+            contentType: 'application/json;charset=utf-8'
+        }).then((response) => {
+            if (!response.users_second_factors?.[0]) {
+                throw new Error('You probably provided the correct factor, but unable to understand the response');
+            }
+
+            const {complete, success, message} = response.users_second_factors[0];
+
+            if (!success) {
+                throw new Error('Proof processing failed');
+            }
+
+            if (complete) {
+                return this.session.handleAuthentication();
+            }
+
+            this.setError(message);
+            return {complete};
+        }).catch((error) => {
+            const originalError = error.payload?.errors[0];
+            throw originalError || error;
+        });
+    }
+
+    _assertFactor() {
+        if (!this._factor) {
+            throw new Error('Something went wrong - factor is missing internally');
+        }
+    }
+
+    _checkOtp() {
+        if (!this._proof.match(/^\d{6}$/)) {
+            throw new Error('OTP must be 6 digits');
+        }
     }
 
     deactivate() {

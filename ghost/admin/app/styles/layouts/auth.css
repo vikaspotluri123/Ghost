@@ -138,6 +138,18 @@
     box-shadow: none !important;
 }
 
+/* Second factor
+/* ---------------------------------------------------------- */
+
+.gh-signin.gh-mfa .gh-mfa-change-factor {
+    display: block;
+    text-align: center;
+    font-size: 1.6rem;
+    text-decoration: underline !important;
+    margin-top: 6px;
+    margin-inline: auto;
+}
+
 /* Email notification */
 /* ---------------------------------------------------------- */
 

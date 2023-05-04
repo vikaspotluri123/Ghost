@@ -24,6 +24,7 @@
             inputmode="numeric"
             {{on "input" this.setProof}}
             required
+            disabled={{@frozen}}
         />
     </div>
 {{else if (eq @factor.type "backup-code")}}
@@ -39,6 +40,7 @@
             inputmode="numeric"
             {{on "input" this.setProof}}
             required
+            disabled={{@frozen}}
         />
     {{else}}
         Take a note of these backup codes. They won't be shown again!
