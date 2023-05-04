@@ -9,7 +9,8 @@ export default class GhMultiFactorVerify extends Component {
     @service multiFactorVerification;
 
     get error() {
-        return this.multiFactorVerification.error;
+        const showError = this.args.showError ?? true;
+        return showError && this.multiFactorVerification.error;
     }
 
     @action
