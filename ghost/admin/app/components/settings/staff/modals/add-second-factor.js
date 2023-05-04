@@ -13,13 +13,13 @@ export default class CreateSecondFactorModal extends Component {
      * @type {{name: string; description: string; type: 'magic-link' | 'backup-code' | 'otp'}}
      */
     model = {};
-    element = null;
+    form = null;
     @tracked step = 1;
     @tracked factor = null;
 
     @action
-    storeElement(element) {
-        this.element = element;
+    storeElement(form) {
+        this.form = form;
     }
 
     @action
@@ -40,12 +40,15 @@ export default class CreateSecondFactorModal extends Component {
         this.setModelProperty('type', event.target.value);
     }
 
+    willDestroy() {
+        super.willDestroy(...arguments);
+        this.form = null;
+    }
+
     @task({drop: true})
     *createFactorTask() {
         try {
-            /** @type {HTMLFormElement} */
-            const form = this.element;
-            if (!(form?.reportValidity())) {
+            if (!this.form.reportValidity()) {
                 return;
             }
 
@@ -72,6 +75,10 @@ export default class CreateSecondFactorModal extends Component {
 
     @task({drop: true})
     *verifyFactorTask() {
+        if (!this.form.reportValidity()) {
+            return;
+        }
+
         try {
             const factor = yield this.multiFactorVerification.verify();
             this.args.close(factor);

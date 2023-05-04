@@ -13,8 +13,22 @@ export default class VerifySecondFactorModal extends Component {
         this.args.close(false);
     }
 
+    @action
+    storeForm(form) {
+        this.form = form;
+    }
+
+    willDestroy() {
+        super.willDestroy(...arguments);
+        this.form = null;
+    }
+
     @task({drop: true})
     *verifyFactorTask() {
+        if (!this.form.reportValidity()) {
+            return;
+        }
+
         try {
             const newFactor = yield this.multiFactorVerification.verify();
             this.args.close(newFactor);

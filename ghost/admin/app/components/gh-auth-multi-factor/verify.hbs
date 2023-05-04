@@ -16,12 +16,14 @@
         <label for="otp-verification" class="db">6-digit OTP from your authenticator:</label>
         <input
             id="otp-verification"
+            class="gh-input"
             pattern="[0-9]+"
             type="number"
             minlength="6"
             maxlength="6"
             inputmode="numeric"
             {{on "input" this.setProof}}
+            required
         />
     </div>
 {{else if (eq @factor.type "backup-code")}}
@@ -29,12 +31,14 @@
         <label for="backup-verification" class="db">Enter your backup code:</label>
         <input
             id="backup-verification"
+            class="gh-input"
             pattern="[0-9-]+"
             type="number"
             minlength="12"
             maxlength="15"
             inputmode="numeric"
             {{on "input" this.setProof}}
+            required
         />
     {{else}}
         Take a note of these backup codes. They won't be shown again!

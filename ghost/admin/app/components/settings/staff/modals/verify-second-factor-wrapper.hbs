@@ -5,7 +5,9 @@
     <button type="button" class="close" title="Close" {{on "click" this.close}}>{{svg-jar "close"}}<span
             class="hidden">Close</span></button>
 
-    <GhAuthMultiFactor::Verify @factor={{@data.factor}}></GhAuthMultiFactor::Verify>
+    <form id="modal-factor-verification" {{did-insert this.storeForm}}>
+        <GhAuthMultiFactor::Verify @factor={{@data.factor}}></GhAuthMultiFactor::Verify>
+    </form>
 
     <div class="modal-footer">
         <button class="gh-btn" data-test-button="cancel-activate-factor" type="button" {{on "click" this.close}}>
