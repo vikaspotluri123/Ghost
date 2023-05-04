@@ -15,6 +15,8 @@ export default class UnauthenticatedRoute extends Route {
 
             if (setup.status !== true) {
                 this.transitionTo('setup');
+            } else if (this.session.waitingForMfa) {
+                this.transitionTo('signin.second-factor');
             } else {
                 return this.session.prohibitAuthentication('home');
             }

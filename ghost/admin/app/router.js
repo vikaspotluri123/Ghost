@@ -16,6 +16,7 @@ Router.map(function () {
 
     this.route('signin');
     this.route('signout');
+    this.route('signin.second-factor', {path: '/signin/second-factor'});
     this.route('signup', {path: '/signup/:token'});
     this.route('reset', {path: '/reset/:token'});
 
