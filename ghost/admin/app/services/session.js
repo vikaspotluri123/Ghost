@@ -25,6 +25,7 @@ export default class SessionService extends ESASessionService {
     @inject config;
 
     @tracked user = null;
+    @tracked waitingForMfa = false;
 
     skipAuthSuccessHandler = false;
 
@@ -33,9 +34,18 @@ export default class SessionService extends ESASessionService {
             return;
         }
 
-        const id = options.id || 'me';
-        const user = await this.dataStore.queryRecord('user', {id});
-        this.user = user;
+        try {
+            const id = options.id || 'me';
+            const user = await this.dataStore.queryRecord('user', {id});
+            this.user = user;
+            this.waitingForMfa = false;
+        } catch (error) {
+            if (error.payload?.errors?.[0]?.code === 'MFA_REQUIRED') {
+                this.waitingForMfa = true;
+            }
+
+            throw error;
+        }
     }
 
     async postAuthPreparation() {
