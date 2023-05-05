@@ -163,6 +163,16 @@ class Users {
                 transacting: frameOptions.transacting
             });
 
+            if (labs.isSet('multiFactorAuthentication')) {
+                await this.models.UsersSecondFactor.destroy({
+                    ...frameOptions,
+                    require: false,
+                    destroyBy: {
+                        user_id: frameOptions.id
+                    }
+                });
+            }
+
             await this.assignTagToUserPosts({
                 id: frameOptions.id,
                 context: frameOptions.context,
