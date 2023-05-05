@@ -65,6 +65,7 @@ User = ghostBookshelf.Model.extend({
             password: security.identifier.uid(50),
             visibility: 'public',
             status: 'active',
+            mfa_enabled: false,
             comment_notifications: true,
             free_member_signup_notification: true,
             paid_subscription_started_notification: true,
