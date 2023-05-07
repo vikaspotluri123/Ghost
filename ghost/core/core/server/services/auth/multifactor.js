@@ -1,5 +1,6 @@
 const ObjectID = require('bson-objectid').default;
-const {createSimpleMFA, StorageService, defaultStrategies, StrategyError} = require('@potluri/simple-mfa');
+const {createSimpleMfa, StorageService, StrategyError} = require('@potluri/simple-mfa');
+const {defaultStrategies} = require('@potluri/simple-mfa/default-strategies.js');
 const settings = require('../../../shared/settings-cache/index.js');
 const errors = require('@tryghost/errors');
 const tpl = require('@tryghost/tpl');
@@ -23,7 +24,7 @@ module.exports.getMfaService = () => {
 
 module.exports.createMfaService = () => {
     const storageService = new StorageService(getSecrets());
-    const simpleMfa = createSimpleMFA({
+    const simpleMfa = createSimpleMfa({
         generateId: () => ObjectID().toHexString(),
         sendEmail: (context, variables) => {
             // @TODO: wire up with email service
