@@ -248,7 +248,13 @@ module.exports = function apiRoutes() {
         shared.middleware.brute.userLogin,
         http(api.session.add)
     );
-    router.post('/session/second-factor', mfaEnabled, mw.authAdminApi, http(api.usersSecondFactors.validate));
+    router.post(
+        '/session/second-factor',
+        mfaEnabled,
+        shared.middleware.brute.userMfa,
+        mw.authAdminApi,
+        http(api.usersSecondFactors.validate)
+    );
     router.del('/session', mw.authAdminApi, http(api.session.delete));
 
     // ## Identity

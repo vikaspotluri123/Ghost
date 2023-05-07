@@ -20,6 +20,10 @@ const messages = {
         error: 'Only {rateSigninAttempts} tries per IP address every {rateSigninPeriod} seconds.',
         context: 'Too many login attempts.'
     },
+    userMfaError: {
+        error: 'Only {rfa} tries per IP address every {rfp} seconds.',
+        context: 'Too many login (second-factor) attempts.'
+    },
     tooManyAttempts: 'Too many attempts.',
     webmentionsBlock: 'Too many mention attempts',
     emailPreviewBlock: 'Only 10 test emails can be sent per hour'
@@ -29,6 +33,7 @@ let spamGlobalBlock = spam.global_block || {};
 let spamGlobalReset = spam.global_reset || {};
 let spamUserReset = spam.user_reset || {};
 let spamUserLogin = spam.user_login || {};
+let spamUserMfa = spam.user_mfa || {};
 let spamMemberLogin = spam.member_login || {};
 let spamContentApiKey = spam.content_api_key || {};
 let spamWebmentionsBlock = spam.webmentions_block || {};
@@ -44,6 +49,7 @@ let userLoginInstance;
 let membersAuthInstance;
 let membersAuthEnumerationInstance;
 let userResetInstance;
+let userMfaInstance;
 let contentApiKeyInstance;
 let emailPreviewBlockInstance;
 
@@ -308,6 +314,39 @@ const userReset = function userReset() {
     return userResetInstance;
 };
 
+// Stop second factor prove requests when there are (freeRetries + 1) requests per lifetime per session
+// Defaults here are 10 attempts per hour for a user+IP pair
+// The endpoint is then locked for an hour
+// @TODO: add defaults to config
+const userMfa = function userMfa() {
+    const ExpressBrute = require('express-brute');
+    const BruteKnex = require('brute-knex');
+    const db = require('../../../../data/db');
+
+    store = store || new BruteKnex({
+        tablename: 'brute',
+        createTable: false,
+        knex: db.knex
+    });
+
+    userMfaInstance = userMfaInstance || new ExpressBrute(store,
+        extend({
+            attachResetToRequest: true,
+            failCallback(req, res, next, nextValidRequestDate) {
+                return next(new errors.TooManyRequestsError({
+                    message: `Too many second factor attempts try again in ${moment(nextValidRequestDate).fromNow(true)}`,
+                    context: tpl(messages.userMfaError.error,
+                        {rfa: spamUserMfa.freeRetries + 1 || 10, rfp: spamUserMfa.lifetime || 60 * 60}),
+                    help: tpl(messages.userMfaError.context)
+                }));
+            },
+            handleStoreError: handleStoreError
+        }, pick(spamUserMfa, spamConfigKeys))
+    );
+
+    return userMfaInstance;
+};
+
 // This protects a private blog from spam attacks. The defaults here allow 10 attempts per IP per hour
 // The endpoint is then locked for an hour
 const privateBlog = () => {
@@ -375,6 +414,7 @@ module.exports = {
     membersAuth: membersAuth,
     membersAuthEnumeration: membersAuthEnumeration,
     userReset: userReset,
+    userMfa,
     privateBlog: privateBlog,
     contentApiKey: contentApiKey,
     webmentionsBlock: webmentionsBlock,
@@ -389,6 +429,7 @@ module.exports = {
         membersAuthInstance = undefined;
         membersAuthEnumerationInstance = undefined;
         userResetInstance = undefined;
+        userMfaInstance = undefined;
         contentApiKeyInstance = undefined;
 
         spam = config.get('spam') || {};
@@ -397,6 +438,7 @@ module.exports = {
         spamGlobalReset = spam.global_reset || {};
         spamUserReset = spam.user_reset || {};
         spamUserLogin = spam.user_login || {};
+        spamUserMfa = spam.user_mfa || {};
         spamMemberLogin = spam.member_login || {};
         spamContentApiKey = spam.content_api_key || {};
     }

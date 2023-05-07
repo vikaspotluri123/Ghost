@@ -51,6 +51,17 @@ module.exports = {
         })(req, res, next);
     },
     /**
+     * block per user
+     */
+    userMfa(req, res, next) {
+        return spamPrevention.userMfa().getMiddleware({
+            ignoreIP: false,
+            key(_req, _res, _next) {
+                _next(`${_req.body.username}mfa`);
+            }
+        })(req, res, next);
+    },
+    /**
      * block per ip
      */
     privateBlog(req, res, next) {

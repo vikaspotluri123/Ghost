@@ -73,6 +73,12 @@
             "lifetime": 3600,
             "freeRetries": 4
         },
+        "user_mfa": {
+            "minWait": 3600000,
+            "maxWait": 3600000,
+            "lifetime": 3600,
+            "freeRetries": 9
+        },
         "global_reset": {
             "minWait": 3600000,
             "maxWait": 3600000,
