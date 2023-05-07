@@ -1,5 +1,6 @@
 import Component from '@glimmer/component';
 import {action} from '@ember/object';
+import {getOtpUri} from '@potluri/simple-mfa/browser';
 import {inject as service} from '@ember/service';
 
 export default class GhMultiFactorVerify extends Component {
@@ -24,10 +25,8 @@ export default class GhMultiFactorVerify extends Component {
     }
 
     get otpUrl() {
-        const label = encodeURI(this.settings.title);
-        const account = encodeURI(this.session.user.email);
-        const safeSecret = this.otpSecret;
-        return `otpauth://totp/${label}:${account}?secret=${safeSecret}&issuer=${label}`;
+        // issuer, account, secret, [label=issuer]
+        return getOtpUri(this.settings.title, this.session.user.email, this.otpSecret);
     }
 
     get otpSecret() {
