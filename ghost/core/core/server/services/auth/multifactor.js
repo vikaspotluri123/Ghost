@@ -67,6 +67,10 @@ module.exports.createMfaService = () => {
      */
     async function validateSecondFactor(storedStrategy, proof, forActivation = false) {
         const strategy = simpleMfa.coerce(storedStrategy);
+        if (!forActivation && strategy.status !== 'active') {
+            throw new errors.BadRequestError({message: messages.factorIsNotActive});
+        }
+
         const prepareResult = await simpleMfa.prepare(strategy);
 
         if (prepareResult === 'email_sent') {

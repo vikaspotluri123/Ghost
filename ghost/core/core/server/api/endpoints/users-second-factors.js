@@ -191,9 +191,6 @@ module.exports = {
                 {require: true}
             )).toJSON();
 
-            if (storedStrategy.status !== 'active') {
-                throw new errors.BadRequestError({message: messages.factorIsNotActive});
-            }
 
             const response = await getMfaService().validateSecondFactor(storedStrategy, frame.data.proof);
 
