@@ -3,6 +3,7 @@ const {getMfaService} = require('../services/auth/multifactor.js');
 const ghostBookshelf = require('./base');
 
 const UsersSecondFactor = ghostBookshelf.Model.extend({
+    hasTimestamps: false,
     tableName: 'users_second_factors',
 
     User() {

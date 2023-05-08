@@ -6,6 +6,7 @@ const tpl = require('@tryghost/tpl');
 const messages = {
     emailSent: 'An email has been sent, please check your email.',
     factorMustBePendingToVerifyForActivation: 'This second factor is {status}, there is no need to provide verification for activation.',
+    factorIsNotActive: 'Factor is not active; cannot be used to log you in',
     disablingThisFactorWillLockYouOut: 'Cannot disable the only active factor'
 };
 
@@ -84,7 +85,8 @@ module.exports.createMfaService = () => {
         }
 
         if (await simpleMfa.validate(strategy, proof)) {
-            return {success: true, complete: true, status: forActivation ? 'activated' : 'created'};
+            const postValidated = forActivation ? undefined : await simpleMfa.postValidate(strategy, proof);
+            return {postValidated, success: true, complete: true, status: forActivation ? 'activated' : 'created'};
         }
 
         const InvalidSecretError = forActivation ? errors.BadRequestError : errors.UnauthorizedError;

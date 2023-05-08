@@ -13,7 +13,6 @@ const messages = {
     factorCountReached: 'You cannot add any more factors',
     minimumCountRequired: 'Cannot delete this second factor - you would not have enough',
     validationRequiresFactorAndProof: 'Missing factor_id or proof',
-    factorIsNotActive: 'Factor is not active; cannot be used to log you in',
     mustBeArrayWithOneElement: 'Factor must be an array with 1 element'
 };
 
@@ -186,13 +185,19 @@ module.exports = {
         },
         /** @param {import('@tryghost/api-framework').Frame} frame */
         async query(frame) {
-            const storedStrategy = (await models.UsersSecondFactor.findOne(
+            const model = await models.UsersSecondFactor.findOne(
                 {id: frame.data.factor_id, user_id: frame.user.id},
                 {require: true}
-            )).toJSON();
+            );
 
+            const response = await getMfaService().validateSecondFactor(model.toJSON(), frame.data.proof);
 
-            const response = await getMfaService().validateSecondFactor(storedStrategy, frame.data.proof);
+            if (response.postValidated) {
+                const {postValidated: newModel} = response;
+                delete response.postValidated;
+                model.set(newModel);
+                await model.save(model.changed, {patch: true});
+            }
 
             if (response.complete) {
                 sessionService.secondFactorVerified(frame.original.session);
