@@ -49,6 +49,7 @@ let userLoginInstance;
 let membersAuthInstance;
 let membersAuthEnumerationInstance;
 let userResetInstance;
+/** @type {import('express-brute')} */
 let userMfaInstance;
 let contentApiKeyInstance;
 let emailPreviewBlockInstance;

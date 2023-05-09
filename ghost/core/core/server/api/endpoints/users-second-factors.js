@@ -4,6 +4,7 @@ const errors = require('@tryghost/errors');
 const models = require('../../models');
 const {sessionService} = require('../../services/auth/session/index.js');
 const {getMfaService} = require('../../services/auth/multifactor.js');
+const web = require('../../web');
 
 const MAX_FACTORS_PER_USER = 15;
 
@@ -189,6 +190,7 @@ module.exports = {
                 {id: frame.data.factor_id, user_id: frame.user.id},
                 {require: true}
             );
+            const userEmail = frame.user.get('email');
 
             const response = await getMfaService().validateSecondFactor(model.toJSON(), frame.data.proof);
 
@@ -201,6 +203,8 @@ module.exports = {
 
             if (response.complete) {
                 sessionService.secondFactorVerified(frame.original.session);
+                // @ts-expect-error `next` is an optional parameter to express brute
+                web.shared.middleware.api.spamPrevention.userMfa().reset(frame.options.ip, `${userEmail}mfa`);
             }
 
             return response;
