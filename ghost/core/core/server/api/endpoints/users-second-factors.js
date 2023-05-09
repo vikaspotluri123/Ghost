@@ -192,7 +192,8 @@ module.exports = {
             );
             const userEmail = frame.user.get('email');
 
-            const response = await getMfaService().validateSecondFactor(model.toJSON(), frame.data.proof);
+            const response = await getMfaService()
+                .validateSecondFactor(model.toJSON(), userEmail, frame.data.proof);
 
             if (response.postValidated) {
                 const {postValidated: newModel} = response;
