@@ -64,6 +64,7 @@ export default class SecondFactorController extends Controller {
 
             if (response && 'complete' in response && !response.complete) {
                 this.userCanDoSomething = false;
+                return true;
             }
         } catch (error) {
             this.multiFactorVerification.setError(error.message);

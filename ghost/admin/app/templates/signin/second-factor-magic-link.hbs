@@ -1,0 +1,31 @@
+<div class="gh-flow" {{did-insert this.sendProof}}>
+    <div class="gh-flow-content-wrap">
+        <section class="gh-flow-content">
+            <form class="gh-signin gh-mfa" novalidate="novalidate">
+                <header>
+                    <div class="gh-site-icon" style={{site-icon-style}}></div>
+                    <h1>Confirming Access to {{this.config.blogTitle}}.</h1>
+                </header>
+
+                {{#if this.multiFactorVerification.error}}
+                    <p class="main-error">
+                        There was an issue with this magic link: <br />
+                        {{this.multiFactorVerification.error}}
+                    </p>
+                {{else}}
+                    <p class="tc">Signing you in...</p>
+                {{/if}}
+
+                {{#if this.canSelectAnotherFactor}}
+                    <LinkTo
+                        @route="signin.second-factor"
+                        class="gh-mfa-change-factor"
+                        {{on "click" this.multiFactorVerification.deactivate}}
+                    >
+                        use a different factor
+                    </LinkTo>
+                {{/if}}
+            </form>
+        </section>
+    </div>
+</div>

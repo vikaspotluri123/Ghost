@@ -137,6 +137,7 @@ export default class MultiFactorVerificationService extends Service {
         }
     }
 
+    @action
     deactivate() {
         this._proof = '';
         this._factor = null;
