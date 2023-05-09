@@ -44,8 +44,10 @@
         />
     {{else}}
         Take a note of these backup codes. They won't be shown again!
-        <pre {{did-insert this.acknowledgeBackupCodes}}>{{#each @factor.context as |backupCode|}}<div>{{backupCode}}</div>{{/each}}</pre>
+        <pre {{did-insert this.setFactorWithNoProof}}>{{#each @factor.context as |backupCode|}}<div>{{backupCode}}</div>{{/each}}</pre>
     {{/if}}
+{{else if (eq @factor.type "magic-link")}}
+    <p class="tc f2" {{did-insert this.setFactorWithNoProof}}>Request a magic link</p>
 {{else}}
     Error: don't know how to render verification of {{@factor.name}} ("{{@factor.type}}")
 {{/if}}

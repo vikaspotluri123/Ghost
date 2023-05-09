@@ -34,7 +34,7 @@ export default class GhMultiFactorVerify extends Component {
     }
 
     @action
-    acknowledgeBackupCodes() {
+    setFactorWithNoProof() {
         this.multiFactorVerification.setProof(this.args.factor);
     }
 }

@@ -1,4 +1,5 @@
 import Service, {inject as service} from '@ember/service';
+import {MAGIC_LINK_REQUESTING_EMAIL} from '@potluri/simple-mfa/browser';
 import {action} from '@ember/object';
 import {tracked} from '@glimmer/tracking';
 
@@ -93,6 +94,8 @@ export default class MultiFactorVerificationService extends Service {
                 this._proof = originalProof;
                 throw new Error(`Backup code must be 12 digits, optionally with dashes (-) in between`);
             }
+        } else if (this._factor.type === FactorType.magicLink) {
+            this._proof = MAGIC_LINK_REQUESTING_EMAIL;
         }
 
         const url = this.ghostPaths.url.api('/session/second-factor');
