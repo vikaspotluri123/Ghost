@@ -40,9 +40,9 @@ export default class UserController extends Controller {
     @tracked scratchValues = new TrackedObject();
     @tracked slugValue = null; // not set directly on model to avoid URL changing before save
 
-    /** @type {import('ember').Ember.ArrayProxy} */
+    /** @type {object[]} */
     _unsortedSecondFactors = null;
-    /** @type {import('ember').Ember.ArrayProxy} */
+    /** @type {object[]} */
     @tracked secondFactors;
 
     /**
@@ -57,11 +57,13 @@ export default class UserController extends Controller {
      */
     @tracked _computedSecondFactorLogic = {};
 
+    /** @param {import('ember').Ember.ArrayProxy | object[]} factorList */
     set unsortedSecondFactors(factorList) {
-        this._unsortedSecondFactors = factorList;
+        this._unsortedSecondFactors = Array.isArray(factorList) ? factorList : factorList.toArray();
         this._computeSecondFactorLogic();
     }
 
+    /** @returns {object[]} */
     get unsortedSecondFactors() {
         return this._unsortedSecondFactors;
     }
@@ -435,7 +437,7 @@ export default class UserController extends Controller {
         });
 
         if (factor) {
-            this.unsortedSecondFactors.addObject(factor);
+            this.unsortedSecondFactors.push(factor);
             this._computeSecondFactorLogic();
         }
     }
