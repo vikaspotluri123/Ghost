@@ -3,9 +3,9 @@ import {action} from '@ember/object';
 import {inject as service} from '@ember/service';
 import {task} from 'ember-concurrency';
 
-export default class VerifySecondFactorModal extends Component {
+export default class ActivateSecondFactorModal extends Component {
     @service notifications;
-    /** @type {import('../../../../services/multi-factor-verification.js').default} */
+    /** @type {import('../../../../services/multi-factor-verification').default} */
     @service multiFactorVerification;
 
     @action

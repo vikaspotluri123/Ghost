@@ -8,7 +8,7 @@ import SuspendUserModal from '../../../components/settings/staff/modals/suspend-
 import TransferOwnershipModal from '../../../components/settings/staff/modals/transfer-ownership';
 import UnsuspendUserModal from '../../../components/settings/staff/modals/unsuspend-user';
 import UploadImageModal from '../../../components/settings/staff/modals/upload-image';
-import VerifySecondFactorModal from '../../../components/settings/staff/modals/verify-second-factor-wrapper';
+import ActivateSecondFactorModal from '../../../components/settings/staff/modals/activate-second-factor';
 import copyTextToClipboard from 'ghost-admin/utils/copy-text-to-clipboard';
 import isNumber from 'ghost-admin/utils/isNumber';
 import windowProxy from 'ghost-admin/utils/window-proxy';
@@ -409,7 +409,7 @@ export default class UserController extends Controller {
 
     @action
     async proveFactor(factor) {
-        const newFactor = await this.modals.open(VerifySecondFactorModal, {factor});
+        const newFactor = await this.modals.open(ActivateSecondFactorModal, {factor});
         if (newFactor) {
             this.unsortedSecondFactors = this.unsortedSecondFactors.map((maybeThisFactor) => {
                 if (maybeThisFactor === factor) {
