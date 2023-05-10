@@ -1,5 +1,5 @@
 import Service, {inject as service} from '@ember/service';
-import {MAGIC_LINK_REQUESTING_EMAIL} from '@potluri/simple-mfa/browser';
+import {MAGIC_LINK_REQUESTING_EMAIL, BACKUP_CODE_PENDING_TO_ACTIVE_PROOF} from '@potluri/simple-mfa/browser';
 import {action} from '@ember/object';
 import {tracked} from '@glimmer/tracking';
 
@@ -50,7 +50,7 @@ export default class MultiFactorVerificationService extends Service {
         if (this._factor.type === FactorType.OTP) {
             this._checkOtp();
         } else if (this._factor.type === FactorType.backupCode) {
-            this._proof = 'acknowledged';
+            this._proof = BACKUP_CODE_PENDING_TO_ACTIVE_PROOF;
         }
 
         const url = this.ghostPaths.url.api('/users/me/second-factors', this._factor.id, 'activate');
