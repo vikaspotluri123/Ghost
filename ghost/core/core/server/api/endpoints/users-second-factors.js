@@ -159,9 +159,11 @@ module.exports = {
         },
         permissions: permissionOnlySelf,
         async query(frame) {
-            const count = await models.UsersSecondFactor.count({user_id: frame.user.id});
-            if (count <= 1) {
-                throw new errors.BadRequestError({message: messages.minimumCountRequired});
+            if (frame.user.get('mfa_enabled')) {
+                const count = await models.UsersSecondFactor.count({user_id: frame.user.id});
+                if (count <= 1) {
+                    throw new errors.BadRequestError({message: messages.minimumCountRequired});
+                }
             }
 
             return models.UsersSecondFactor.destroy({user_id: frame.user.id, id: frame.options.id, require: true});
