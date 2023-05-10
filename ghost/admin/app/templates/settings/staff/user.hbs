@@ -458,6 +458,7 @@
             {{/if}}
 
             {{#if this.isOwnProfile}}
+                {{#if (feature "multiFactorAuthentication")}}
                 <div class="user-profile">
                     <div class="pa5">
                         <div class="user-multi-factor-form">
@@ -520,6 +521,7 @@
                         </div>
                     </div>
                 </div>
+                {{/if}}
                 <form class="user-profile">
                     <div class="pa5">
                         <fieldset class="user-details-form">
