@@ -32,6 +32,7 @@ export default class VerifySecondFactorModal extends Component {
         try {
             const newFactor = yield this.multiFactorVerification.activate();
             this.args.close(newFactor);
+            return true;
         } catch (error) {
             this.multiFactorVerification.setError(error.message);
         }

@@ -26,6 +26,7 @@ export default class DeleteSecondFactorModal extends Component {
             this.notifications.showAPIError(error, {type: 'error', key: 'factor.delete.failed'});
         } finally {
             this.args.close(success);
+            return success;
         }
     }
 }

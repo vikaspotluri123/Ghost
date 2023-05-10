@@ -69,6 +69,7 @@ export default class CreateSecondFactorModal extends Component {
             }
 
             this.args.close(factor);
+            return true;
         } catch (error) {
             this.notifications.showAPIError(error, {type: 'error', key: 'factor.create.failed'});
         }
@@ -83,6 +84,7 @@ export default class CreateSecondFactorModal extends Component {
         try {
             const factor = yield this.multiFactorVerification.activate();
             this.args.close(factor);
+            return true;
         } catch (error) {
             this.multiFactorVerification.setError(error.message);
         }
