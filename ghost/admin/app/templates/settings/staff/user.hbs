@@ -461,7 +461,7 @@
                 {{#if (feature "multiFactorAuthentication")}}
                 <div class="user-profile">
                     <div class="pa5">
-                        <div class="user-multi-factor-form">
+                        <div class="user-multi-factor-form" data-testid="multi-factor-authentication">
                             <div class="user-multi-factor-heading">
                                 <h4>Multi Factor Authentication</h4>
                                 <div class="user-setting-toggle user-mfa-toggle">
@@ -491,6 +491,7 @@
                                             disabled={{and this.user.mfaEnabled this.hasOnlyOneActiveFactor (eq factor.status "active")}}
                                             type="button" class="gh-btn gh-btn-hover-red gh-btn-icon"
                                             {{on "click" (fn this.deleteSecondFactor factor)}}
+                                            data-testid="delete-second-factor"
                                         >
                                             <span>{{svg-jar "trash" class="w6 h6 stroke-midgrey"}}</span>
                                         </button>
@@ -513,7 +514,12 @@
                             {{/each}}
                             {{#if this.canAddSecondFactor}}
                                 <div class="flex justify-center mt4">
-                                    <button type="button" class="dib pa2 gh-btn gh-btn-primary" {{on "click" this.showAddFactorModal}}>
+                                    <button
+                                        type="button"
+                                        class="dib pa2 gh-btn gh-btn-primary"
+                                        data-testid="add-second-factor"
+                                        {{on "click" this.showAddFactorModal}}
+                                    >
                                         Add new Second Factor
                                     </button>
                                 </div>
