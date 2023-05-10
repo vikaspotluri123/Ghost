@@ -55,6 +55,10 @@
         "members_stripe_webhook_secret": {
             "defaultValue": null,
             "type": "string"
+        },
+        "second_factor_secrets": {
+            "defaultValue": null,
+            "type": "object"
         }
     },
     "site": {

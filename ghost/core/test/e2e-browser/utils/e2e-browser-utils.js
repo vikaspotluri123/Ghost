@@ -134,6 +134,7 @@ const enableLabs = async (page) => {
     const alphaList = page.locator('.gh-main-section').filter({hasText: 'Alpha Features'});
     await alphaList.locator('label[for="labs-webmentions"]').click();
     await alphaList.locator('label[for="labs-tipsAndDonations"]').click();
+    await alphaList.locator('label[for="labs-multiFactorAuthentication"]').click();
 };
 
 /**
