@@ -11,7 +11,7 @@ export default class CreateSecondFactorModal extends Component {
     @service multiFactorVerification;
 
     /**
-     * @type {{name: string; description: string; type: 'magic-link' | 'backup-code' | 'otp'}}
+     * @type {{name: string; type: 'magic-link' | 'backup-code' | 'otp'}}
      */
     model = {};
     form = null;
