@@ -318,7 +318,6 @@ const userReset = function userReset() {
 // Stop second factor prove requests when there are (freeRetries + 1) requests per lifetime per session
 // Defaults here are 10 attempts per hour for a user+IP pair
 // The endpoint is then locked for an hour
-// @TODO: add defaults to config
 const userMfa = function userMfa() {
     const ExpressBrute = require('express-brute');
     const BruteKnex = require('brute-knex');
