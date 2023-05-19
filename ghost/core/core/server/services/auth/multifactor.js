@@ -9,9 +9,8 @@ const GHOST_ADMIN_SECOND_FACTOR_MAGIC_LINK_TPL = '/signin/second-factor/magic-li
 const messages = {
     signIn: 'Sign in to {siteTitle}',
     emailSent: 'An email has been sent, please check your email.',
-    factorMustBePendingToVerifyForActivation: 'This second factor is {status}, there is no need to provide verification for activation.',
-    factorIsNotActive: 'Factor is not active; cannot be used to log you in',
-    disablingThisFactorWillLockYouOut: 'Cannot disable the only active factor'
+    disablingThisFactorWillLockYouOut: 'Cannot disable the only active factor',
+    invalidSecret: 'Factor secret is invalid'
 };
 
 /** @type {ReturnType<typeof module.exports.createMfaService>} */
@@ -65,24 +64,26 @@ module.exports.getMfaService = () => {
 
 module.exports.createMfaService = () => {
     const {
-        createSimpleMfa, StorageService, StrategyError, MAGIC_LINK_SERVER_TO_SEND_EMAIL: emailSentConstant
+        createSimpleMfa, SimpleMfaNodeCrypto, StrategyError, MAGIC_LINK_SERVER_TO_SEND_EMAIL: emailSentConstant
     } = require('@potluri/simple-mfa');
     const {defaultStrategies} = require('@potluri/simple-mfa/default-strategies.js');
-    const storageService = new StorageService(getSecrets());
+    const simpleMfaCrypto = new SimpleMfaNodeCrypto(getSecrets());
     const simpleMfa = createSimpleMfa({
         generateId: () => ObjectID().toHexString(),
-        strategies: defaultStrategies(storageService)
+        strategies: defaultStrategies(simpleMfaCrypto)
     });
 
     MAGIC_LINK_SEND_EMAIL = emailSentConstant;
 
     /**
-     * @param {any} jsonModel
-     * @param {Parameters<typeof simpleMfa['assertStatusTransition']>[1]} nextStatus
+     * @typedef {typeof simpleMfa} Mfa
+     * @description Calls a simpleMfa method and converts errors thrown by the library to a Ghost-compatible format
+     * @type {<TMethod extends keyof Mfa>(method: TMethod, ...args: Parameters<Mfa[TMethod]>) => ReturnType<Mfa[TMethod]>}
      */
-    function assertStatusTransition(jsonModel, nextStatus) {
+    const wrapSimpleMfa = (method, ...args) => {
         try {
-            return simpleMfa.assertStatusTransition(jsonModel, nextStatus);
+            // @ts-expect-error TODO: this is functionally correct and provides correct type inference elsewhere
+            return simpleMfa[method](...args);
         } catch (err) {
             if (isPublicError(err)) {
                 throw new errors.BadRequestError({message: err.message, err});
@@ -90,14 +91,14 @@ module.exports.createMfaService = () => {
 
             throw new errors.InternalServerError({err});
         }
-    }
+    };
 
     function getSecrets() {
         return settings.get('second_factor_secrets') ?? {};
     }
 
-    /**
-     * @param {Parameters<typeof simpleMfa['serialize']>[0][]} strategies
+    /**0
+     * @param {Parameters<Mfa['serialize']>[0][]} strategies
      * @param {boolean} isTrusted
      */
     function serializeForApi(strategies, isTrusted) {
@@ -107,40 +108,43 @@ module.exports.createMfaService = () => {
     /**
      * @param {string} email
      * @param {unknown} proof
-     * @param {boolean} forActivation
      */
-    async function validateSecondFactor(storedStrategy, email, proof, forActivation = false) {
-        const strategy = simpleMfa.coerce(storedStrategy);
-        if (!forActivation && strategy.status !== 'active') {
-            throw new errors.BadRequestError({message: messages.factorIsNotActive});
+    async function validateSecondFactor(storedStrategy, email, proof) {
+        const strategy = wrapSimpleMfa('coerce', storedStrategy);
+        const {type, response} = await wrapSimpleMfa('validate', strategy, proof);
+
+        if (type === 'validationSucceeded') {
+            return {
+                success: true,
+                completed: true,
+                status: 'created',
+                postValidated: response
+            };
         }
 
-        const prepareResult = await simpleMfa.prepare(strategy, proof);
-
-        if (prepareResult?.type === MAGIC_LINK_SEND_EMAIL) {
-            const variables = {id: strategy.id, email, token: prepareResult.data.token};
-            await sendMagicLinkNotification(variables);
-            return {success: true, complete: false, message: messages.emailSent};
+        if (type === 'validationFailed') {
+            const InvalidSecretError = errors.UnauthorizedError;
+            throw new InvalidSecretError({message: messages.invalidSecret});
         }
 
-        // CASE: Strategy#prepare provided a response, but we didn't handle it. We can't assume that we can move on
-        // to validation
-        if (prepareResult) {
-            throw new errors.InternalServerError({message: 'Unknown validation response', context: prepareResult});
+        if (type === 'serverActionRequired') {
+            if (response.action === MAGIC_LINK_SEND_EMAIL) {
+                const variables = {id: strategy.id, email, token: response.data.token};
+                await sendMagicLinkNotification(variables);
+                return {success: true, complete: false, message: messages.emailSent};
+            }
+
+            throw new errors.InternalServerError({
+                message: 'Unknown action required', context: response.action ?? String(response)
+            });
         }
 
-        if (await simpleMfa.validate(strategy, proof)) {
-            const postValidated = forActivation ? undefined : await simpleMfa.postValidate(strategy, proof);
-            return {postValidated, success: true, complete: true, status: forActivation ? 'activated' : 'created'};
-        }
-
-        const InvalidSecretError = forActivation ? errors.BadRequestError : errors.UnauthorizedError;
-        throw new InvalidSecretError({message: 'Factor secret is invalid'});
+        throw new errors.InternalServerError({message: 'Unknown validation response', context: type});
     }
 
     function syncSecrets() {
         const currentSecret = getSecrets();
-        simpleMfa.syncSecrets(storageService, currentSecret);
+        simpleMfa.syncSecrets(simpleMfaCrypto, currentSecret);
         return JSON.stringify(currentSecret);
     }
 
@@ -158,25 +162,16 @@ module.exports.createMfaService = () => {
      * @returns {Promise<boolean>} if a change was made
      */
     async function activatePendingFactor(model, proof) {
-        const storedStrategy = simpleMfa.coerce(model.toJSON());
+        const storedStrategy = wrapSimpleMfa('coerce', model.toJSON());
+        const activated = await wrapSimpleMfa('activate', storedStrategy, proof);
 
-        if (storedStrategy.status !== 'pending') {
-            const message = tpl(messages.factorMustBePendingToVerifyForActivation, {status: storedStrategy.status});
-            throw new errors.BadRequestError({message});
-        }
-
-        assertStatusTransition(storedStrategy, 'active');
-        const {complete, message} = await validateSecondFactor(model.toJSON(), null, proof, true);
-
-        if (complete) {
+        if (activated) {
+            wrapSimpleMfa('assertStatusTransition', storedStrategy, 'active');
             await model.save({status: 'active'});
             return model.wasChanged();
         }
 
-        throw new errors.InternalServerError({
-            message: 'Unexpected state: validation did not error or confirm completion',
-            context: message
-        });
+        throw new errors.BadRequestError({message: messages.invalidSecret});
     }
 
     /**
@@ -204,7 +199,8 @@ module.exports.createMfaService = () => {
         serializeForApi,
         defaults: simpleMfa.create,
         share: simpleMfa.share,
-        assertStatusTransition,
+        /** @type {Mfa['assertStatusTransition']} */
+        assertStatusTransition: (...args) => wrapSimpleMfa('assertStatusTransition', ...args),
         validateSecondFactor,
         syncSecrets,
         isPublicError,
