@@ -1,4 +1,3 @@
-const errors = require('@tryghost/errors');
 const {getMfaService} = require('../services/auth/multifactor.js');
 const ghostBookshelf = require('./base');
 
@@ -11,16 +10,7 @@ const UsersSecondFactor = ghostBookshelf.Model.extend({
     }
 }, {
     create(type, userId) {
-        const mfaService = getMfaService();
-        try {
-            return mfaService.defaults(type, userId);
-        } catch (err) {
-            if (mfaService.isPublicError(err)) {
-                throw new errors.ValidationError({message: err.message, err});
-            }
-
-            throw err;
-        }
+        return getMfaService().defaults(type, userId);
     }
 });
 

@@ -195,14 +195,28 @@ module.exports.createMfaService = () => {
         }
     }
 
+    /**
+     * @param {Parameters<Mfa['create']>} args
+     */
+    async function defaults(...args) {
+        try {
+            return simpleMfa.create(...args);
+        } catch (err) {
+            if (isPublicError(err)) {
+                throw new errors.ValidationError({message: err.message, err});
+            }
+
+            throw err;
+        }
+    }
+
     return {
         serializeForApi,
-        defaults: simpleMfa.create,
+        defaults,
         /** @type {Mfa['assertStatusTransition']} */
         assertStatusTransition: (...args) => wrapSimpleMfa('assertStatusTransition', ...args),
         validateSecondFactor,
         syncSecrets,
-        isPublicError,
         activatePendingFactor,
         ensureStatusChangeWillNotCauseLockOut
     };
