@@ -198,7 +198,6 @@ module.exports.createMfaService = () => {
     return {
         serializeForApi,
         defaults: simpleMfa.create,
-        share: simpleMfa.share,
         /** @type {Mfa['assertStatusTransition']} */
         assertStatusTransition: (...args) => wrapSimpleMfa('assertStatusTransition', ...args),
         validateSecondFactor,
