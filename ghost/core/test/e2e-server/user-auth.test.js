@@ -51,8 +51,12 @@ function loginWithSecondFactorAssertion(sessionEndpoint, needsSecondFactor) {
         });
 }
 
-function addBackupCodesFactor() {
-    return request.post(adminUrlFor('/users/me/second-factors/'))
+async function addBackupCodesFactor() {
+    /** @type {string} */
+    let factorId;
+    /** @type {string[]} */
+    let factorSecrets;
+    await request.post(adminUrlFor('/users/me/second-factors/'))
         .set('Origin', config.get('url'))
         .send({users_second_factors: [{name: 'Backup Codes', type: 'backup-code'}]})
         .expect('Content-Type', /json/)
@@ -63,14 +67,29 @@ function addBackupCodesFactor() {
             assert.ok(jsonResponse);
             assert.ok(jsonResponse.users_second_factors);
             assert.equal(jsonResponse.users_second_factors.length, 1);
-            assert.equal(jsonResponse.users_second_factors[0].status, 'active');
-            return {
-                /** @type {string} */
-                factorId: jsonResponse.users_second_factors[0].id,
-                /** @type {string[]} */
-                factorSecrets: jsonResponse.users_second_factors[0].context
-            };
+            assert.equal(jsonResponse.users_second_factors[0].status, 'pending');
+            assert.ok(jsonResponse.users_second_factors[0].context);
+            factorId = jsonResponse.users_second_factors[0].id;
+            factorSecrets = jsonResponse.users_second_factors[0].context;
         });
+
+    const {BACKUP_CODE_PENDING_TO_ACTIVE_PROOF} = require('@potluri/simple-mfa');
+    await request.post(adminUrlFor(`/users/me/second-factors/${factorId}/activate`))
+        .set('Origin', config.get('url'))
+        .send({proof: BACKUP_CODE_PENDING_TO_ACTIVE_PROOF})
+        .expect('Content-Type', /json/)
+        .expect('Cache-Control', testUtils.cacheRules.private)
+        .expect(200)
+        .then((res) => {
+            const jsonResponse = res.body;
+            assert.ok(jsonResponse);
+            assert.ok(jsonResponse.users_second_factors);
+            assert.equal(jsonResponse.users_second_factors.length, 1);
+            assert.equal(jsonResponse.users_second_factors[0].status, 'active');
+            assert.ok(!jsonResponse.users_second_factors[0].context);
+        });
+
+    return {factorId, factorSecrets};
 }
 
 // Most non-MFA other auth flows are either covered elsewhere or implicitly covered
@@ -126,7 +145,12 @@ describe('User Auth (MFA)', function () {
             .send({users: [{mfa_enabled: false}]})
             .expect('Content-Type', /json/)
             .expect('Cache-Control', testUtils.cacheRules.private)
-            .expect(403);
+            .expect(401)
+            .then((res) => {
+                assert.ok(res.body);
+                assert.ok(res.body.errors);
+                assert.equal(res.body.errors[0].code, 'MFA_REQUIRED');
+            });
 
         // Provide second factor
         await request.post(adminUrlFor('/session/second-factor'))
@@ -140,7 +164,6 @@ describe('User Auth (MFA)', function () {
                 const jsonResponse = res.body;
                 assert.ok(jsonResponse);
                 assert.ok(jsonResponse.users_second_factors);
-                assert.equal(jsonResponse.users_second_factors[0].status, 'created');
                 assert.equal(jsonResponse.users_second_factors[0].complete, true);
                 assert.equal(jsonResponse.users_second_factors[0].success, true);
             });

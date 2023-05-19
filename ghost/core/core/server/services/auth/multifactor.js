@@ -108,6 +108,12 @@ module.exports.createMfaService = () => {
     /**
      * @param {string} email
      * @param {unknown} proof
+     * @returns {Promise<{
+     *  success: boolean;
+     *  complete: boolean;
+     *  postValidated?: object;
+     *  message?: string;
+     * }>}
      */
     async function validateSecondFactor(storedStrategy, email, proof) {
         const strategy = wrapSimpleMfa('coerce', storedStrategy);
@@ -116,8 +122,7 @@ module.exports.createMfaService = () => {
         if (type === 'validationSucceeded') {
             return {
                 success: true,
-                completed: true,
-                status: 'created',
+                complete: true,
                 postValidated: response
             };
         }
