@@ -60,6 +60,7 @@
   },
   "dependencies": {
     "@extractus/oembed-extractor": "3.2.1",
+    "@potluri/simple-mfa": "^0.1.0-beta.3",
     "@sentry/node": "7.69.0",
     "@tryghost/adapter-base-cache": "0.1.5",
     "@tryghost/adapter-cache-redis": "0.0.0",

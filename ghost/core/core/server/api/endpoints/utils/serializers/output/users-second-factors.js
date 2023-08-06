@@ -1,3 +1,4 @@
+// @ts-check
 const {getMfaService} = require('../../../../../services/auth/multifactor.js');
 const {sessionService} = require('../../../../../services/auth/session/index.js');
 
@@ -7,7 +8,7 @@ async function genericSerializer(model, apiImpl, frame) {
     const pojoModels = 'data' in model ? model.data.map(singleModel => singleModel.toJSON()) : [model.toJSON()];
 
     frame.response = {
-        users_second_factors: await mfaService.serializeForApi(pojoModels, isTrusted)
+        users_second_factors: await mfaService.serializeAll(pojoModels, isTrusted)
     };
 
     if ('data' in model) {
@@ -20,7 +21,7 @@ async function genericSerializer(model, apiImpl, frame) {
 async function trustedSerializer(model, apiImpl, frame) {
     const mfaService = getMfaService();
     frame.response = {
-        users_second_factors: await mfaService.serializeForApi([model.toJSON()], true)
+        users_second_factors: await mfaService.serialize(model.toJSON(), true)
     };
 
     return frame.response;

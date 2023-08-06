@@ -67,10 +67,10 @@ module.exports.createMfaService = () => {
         createSimpleMfa, SimpleMfaNodeCrypto, StrategyError, MAGIC_LINK_SERVER_TO_SEND_EMAIL: emailSentConstant
     } = require('@potluri/simple-mfa');
     const {defaultStrategies} = require('@potluri/simple-mfa/default-strategies.js');
-    const simpleMfaCrypto = new SimpleMfaNodeCrypto(getSecrets());
     const simpleMfa = createSimpleMfa({
+        crypto: new SimpleMfaNodeCrypto(getSecrets()),
         generateId: () => ObjectID().toHexString(),
-        strategies: defaultStrategies(simpleMfaCrypto)
+        strategies: defaultStrategies()
     });
 
     MAGIC_LINK_SEND_EMAIL = emailSentConstant;
@@ -97,15 +97,8 @@ module.exports.createMfaService = () => {
         return settings.get('second_factor_secrets') ?? {};
     }
 
-    /**0
-     * @param {Parameters<Mfa['serialize']>[0][]} strategies
-     * @param {boolean} isTrusted
-     */
-    function serializeForApi(strategies, isTrusted) {
-        return Promise.all(strategies.map(strategy => simpleMfa.serialize(strategy, isTrusted)));
-    }
-
     /**
+     * @param {import('@potluri/simple-mfa').BasicAuthStrategy} strategy
      * @param {string} email
      * @param {unknown} proof
      * @returns {Promise<{
@@ -115,8 +108,7 @@ module.exports.createMfaService = () => {
      *  message?: string;
      * }>}
      */
-    async function validateSecondFactor(storedStrategy, email, proof) {
-        const strategy = wrapSimpleMfa('coerce', storedStrategy);
+    async function validateSecondFactor(strategy, email, proof) {
         const {type, response} = await wrapSimpleMfa('validate', strategy, proof);
 
         if (type === 'validationSucceeded') {
@@ -148,9 +140,7 @@ module.exports.createMfaService = () => {
     }
 
     function syncSecrets() {
-        const currentSecret = getSecrets();
-        simpleMfa.syncSecrets(simpleMfaCrypto, currentSecret);
-        return JSON.stringify(currentSecret);
+        return JSON.stringify(simpleMfa.syncSecrets() ?? getSecrets());
     }
 
     /**
@@ -167,11 +157,12 @@ module.exports.createMfaService = () => {
      * @returns {Promise<boolean>} if a change was made
      */
     async function activatePendingFactor(model, proof) {
-        const storedStrategy = wrapSimpleMfa('coerce', model.toJSON());
-        const activated = await wrapSimpleMfa('activate', storedStrategy, proof);
+        /** @type {import('@potluri/simple-mfa').BasicAuthStrategy} */
+        const strategy = model.toJSON();
+        const activated = await wrapSimpleMfa('activate', strategy, proof);
 
         if (activated) {
-            wrapSimpleMfa('assertStatusTransition', storedStrategy, 'active');
+            wrapSimpleMfa('assertStatusTransition', strategy, 'active');
             await model.save({status: 'active'});
             return model.wasChanged();
         }
@@ -216,8 +207,11 @@ module.exports.createMfaService = () => {
     }
 
     return {
-        serializeForApi,
         defaults,
+        /** @type {Mfa['serialize']} */
+        serialize: (...args) => wrapSimpleMfa('serialize', ...args),
+        /** @type {Mfa['serializeAll']} */
+        serializeAll: (...args) => wrapSimpleMfa('serializeAll', ...args),
         /** @type {Mfa['assertStatusTransition']} */
         assertStatusTransition: (...args) => wrapSimpleMfa('assertStatusTransition', ...args),
         validateSecondFactor,

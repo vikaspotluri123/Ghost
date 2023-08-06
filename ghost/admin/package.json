@@ -178,6 +178,7 @@
     "*.js": "eslint"
   },
   "dependencies": {
+    "@potluri/simple-mfa": "^0.1.0-beta.3",
     "jose": "4.14.6",
     "path-browserify": "1.0.1",
     "webpack": "5.88.2"
