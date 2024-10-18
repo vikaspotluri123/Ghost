@@ -861,7 +861,8 @@ jobs:
 
       - name: Update from v4
         run: |
-          ghost update -f -d $V4_DIR --archive $(pwd)/ghost/core/ghost.tgz
+          ghost update -f -d $V4_DIR --archive $(pwd)/ghost/core/ghost.tgz --no-restart
+          ghost run -d $V4_DIR -D
 
       - name: Save Ghost CLI Debug Logs
         if: failure()
@@ -879,7 +880,8 @@ jobs:
         run: |
           DIR=$(mktemp -d)
           ghost install local -d $DIR
-          ghost update -d $DIR --archive $(pwd)/ghost/core/ghost.tgz
+          ghost update -d $DIR --archive $(pwd)/ghost/core/ghost.tgz --no-restart
+          ghost run -d $DIR -D
 
       - name: Print debug logs
         if: failure()
